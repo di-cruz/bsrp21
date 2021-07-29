@@ -1,0 +1,30 @@
+---
+title: "Team RAD's second week :)"
+output: html_notebook
+---
+From the last week, we wanted to add more information to the dataframe which contained all genes and the most significant inhibitor- Diana, Rohan, Andrea
+```{r}
+drug_name = prism_meta[ ,c("column_name","name","indication")]
+drug_name$inhibitor = drug_name$column_name
+drug_name = drug_name[ ,c("inhibitor","name","indication")]
+named_inhibitor_genes = left_join(inhibitor_min_gene, drug_name, "inhibitor")
+```
+
+We looked at only drugs that were -0.2 and more negative. Then assigned ourselves to different inhibitor-gene interactions after exploring a bit. 
+Rohan- Inhibitor: Mazindol (PTEN gene)
+Andrea- Inhibitor: clomipramine (OCD drug)
+Diana- Inhibitor: WR99210 (malaria drug impacting several genes)
+
+For the most part, we have been spending much of our time doing exploratory code on genes to find some significance, 
+
+for example, we did similar code to the KRAS problem set
+Subset expression for KIRREL1
+```{r}
+KIRREL1 = expression[ ,c("KIRREL1","DepMap_ID")]
+meta_kirrel1 = inner_join(KIRREL1, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_kirrel1) + geom_boxplot(mapping = aes(primary_disease, KIRREL1)) + ggtitle("All Cancer KIRREL1 Expression") + theme_minimal()+theme(axis.text.x = element_text(angle = 90))
+```

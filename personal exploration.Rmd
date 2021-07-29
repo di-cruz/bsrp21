@@ -1,0 +1,163 @@
+---
+title: "Exploring with my interesting ones"
+output: html_notebook
+---
+
+```{r}
+without = named_inhibitor_genes[named_inhibitor_genes$inhibitor != "BRD-A16035238-001-01-7::2.5::MTS007", ]
+```
+
+```{r}
+#I want to look at SB-772077B and KIRREL1, so I want to first look at what cancers express KIRREL1
+#Loading in data
+expression = load.from.taiga(data.name='public-21q1-4b39',
+                             data.version=33,
+                             data.file='CCLE_expression',
+                             quiet = T)
+metadata = load.from.taiga(data.name='public-21q1-4b39', 
+                           data.version=33, 
+                           data.file='sample_info', 
+                           quiet = T)
+colnames(expression) = stringr::word(colnames(expression), 1) 
+expression = as.data.frame(expression)
+expression$DepMap_ID = rownames(expression)
+mutation = load.from.taiga(data.name = 'public-21q1-4b39',
+                            data.version = 33,
+                            data.file = 'CCLE_mutations',
+                            quiet = T)
+```
+
+Subset expression for KIRREL1
+```{r}
+KIRREL1 = expression[ ,c("KIRREL1","DepMap_ID")]
+meta_kirrel1 = inner_join(KIRREL1, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_kirrel1) + geom_boxplot(mapping = aes(primary_disease, KIRREL1)) + ggtitle("All Cancer KIRREL1 Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+#above 5 avg, skin cancer, thyroid, bone, brain, endometrial, fibroblast, kidney, liposarcoma, liver, ovarian, rhabdoid, sarcoma,
+#above 6, kidney, brain, fibroblast and skin
+```
+
+Similar to KRAS analysis
+```{r}
+KIRREL1_Mutation = mutation[mutation$Hugo_Symbol == "KIRREL1", ]
+N_KIRREL1_mutation = summarize(group_by(KIRREL1_Mutation, DepMap_ID), N_KIRREL1_mutation = n())
+KIRREL1_Metadata_expression = full_join(N_KIRREL1_mutation, meta_kirrel1, "DepMap_ID")
+KIRREL1_Metadata_expression$KIRREL1_mutated =!is.na(KIRREL1_Metadata_expression$N_KIRREL1_mutation)
+Final_Dataframe = KIRREL1_Metadata_expression[ ,c("DepMap_ID", "KIRREL1_mutated", "KIRREL1", "primary_disease")]
+table(Final_Dataframe$KIRREL1_mutated)
+###Made data frame with expression of KIRREL1, mutationstatus, cell line, and cancer sub type
+#None are mutated lol
+```
+
+another interesting interaction?
+Subset expression for C8orf82
+```{r}
+C8orf82 = expression[ ,c("C8orf82","DepMap_ID")]
+meta_C8orf82 = inner_join(C8orf82, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_C8orf82) + geom_boxplot(mapping = aes(primary_disease, C8orf82)) + ggtitle("All Cancer C8orf82 Expression") + theme_minimal()+theme(axis.text.x = element_text(angle = 90))
+##LOOKS insignificant to me. we can see tho
+```
+
+Similar to KRAS analysis
+```{r}
+C8orf82_Mutation = mutation[mutation$Hugo_Symbol == "C8orf82", ]
+N_C8orf82_mutation = summarize(group_by(C8orf82_Mutation, DepMap_ID), N_C8orf82_mutation = n())
+C8orf82_Metadata_expression = full_join(N_C8orf82_mutation, meta_C8orf82, "DepMap_ID")
+C8orf82_Metadata_expression$C8orf82_mutated =!is.na(C8orf82_Metadata_expression$N_C8orf82_mutation)
+Final_DataframeC8 = C8orf82_Metadata_expression[ ,c("DepMap_ID", "C8orf82_mutated", "C8orf82", "primary_disease")]
+table(Final_Dataframe$C8orf82_mutated)
+###Made data frame with expression of KIRREL1, mutationstatus, cell line, and cancer sub type
+#None are mutated lol
+```
+
+ahhhh
+```{r}
+ggplot(Final_DataframeC8) + geom_boxplot(mapping = aes(C8orf82_mutated, C8orf82)) + ggtitle("Mutated C8orf82 Expression") + theme_minimal()
+t.test(C8orf82 ~ C8orf82_mutated, Final_DataframeC8)
+###lol i mean technically significant
+```
+
+Let's try the last one
+Subset expression for ARHGAP35
+```{r}
+ARHGAP35 = expression[ ,c("ARHGAP35","DepMap_ID")]
+meta_ARHGAP35 = inner_join(ARHGAP35, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_ARHGAP35) + geom_boxplot(mapping = aes(primary_disease, ARHGAP35)) + ggtitle("All Cancer ARHGAP35 Expression") + theme_minimal()+theme(axis.text.x = element_text(angle = 90))
+##LOOKS insignificant to me. we can see tho
+```
+
+Similar to KRAS analysis
+```{r}
+ARHGAP35_Mutation = mutation[mutation$Hugo_Symbol == "ARHGAP35", ]
+N_ARHGAP35_mutation = summarize(group_by(ARHGAP35_Mutation, DepMap_ID), N_ARHGAP35_mutation = n())
+ARHGAP35_Metadata_expression = full_join(N_ARHGAP35_mutation, meta_ARHGAP35, "DepMap_ID")
+ARHGAP35_Metadata_expression$ARHGAP35_mutated =!is.na(ARHGAP35_Metadata_expression$N_ARHGAP35_mutation)
+Final_DataframeARG = ARHGAP35_Metadata_expression[ ,c("DepMap_ID", "ARHGAP35_mutated", "ARHGAP35", "primary_disease")]
+table(Final_DataframeARG$ARHGAP35_mutated)
+###Made data frame with expression of KIRREL1, mutationstatus, cell line, and cancer sub type
+#None are mutated lol
+```
+
+ahhhh
+```{r}
+ggplot(Final_DataframeARG) + geom_boxplot(mapping = aes(ARHGAP35_mutated, ARHGAP35)) + ggtitle("Mutated ARHGAP35 Expression") + theme_minimal()
+t.test(ARHGAP35 ~ ARHGAP35_mutated, Final_DataframeARG)
+###NOT significant
+```
+
+Let's just do the top one
+CDKN1A
+Subset expression for CDKN1A
+```{r}
+CDKN1A = expression[ ,c("CDKN1A","DepMap_ID")]
+meta_CDKN1A = inner_join(CDKN1A, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_CDKN1A) + geom_boxplot(mapping = aes(primary_disease, CDKN1A)) + ggtitle("All Cancer CDKN1A Expression") + theme_minimal()+theme(axis.text.x = element_text(angle = 90))
+##LOOKS insignificant to me. we can see tho
+```
+
+Similar to KRAS analysis
+```{r}
+CDKN1A_Mutation = mutation[mutation$Hugo_Symbol == "CDKN1A", ]
+N_CDKN1A_mutation = summarize(group_by(CDKN1A_Mutation, DepMap_ID), N_CDKN1A_mutation = n())
+CDKN1A_Metadata_expression = full_join(N_CDKN1A_mutation, meta_CDKN1A, "DepMap_ID")
+CDKN1A_Metadata_expression$CDKN1A_mutated =!is.na(CDKN1A_Metadata_expression$N_CDKN1A_mutation)
+Final_DataframeCDK = CDKN1A_Metadata_expression[ ,c("DepMap_ID", "CDKN1A_mutated", "CDKN1A", "primary_disease")]
+table(Final_DataframeCDK$CDKN1A_mutated)
+###Made data frame with expression of KIRREL1, mutationstatus, cell line, and cancer sub type
+#None are mutated lol
+```
+
+ahhhh
+```{r}
+ggplot(Final_DataframeCDK) + geom_boxplot(mapping = aes(CDKN1A_mutated, CDKN1A)) + ggtitle("Mutated C8orf82 Expression") + theme_minimal()
+t.test(CDKN1A ~ CDKN1A_mutated, Final_DataframeCDK)
+###lol not significant
+```
+
+Getting the numbers of the top inhibitor
+```{r}
+impact_inhibitor=named_inhibitor_genes[named_inhibitor_genes$Min_gene >="-0.2",]
+```
+
+HOXC11
+
+GALNT7
+
+
+Rohan: Inhibitor: Mazindol (PTEN gene)
+Andrea: Inhibitor: clomipramine (OCD drug)

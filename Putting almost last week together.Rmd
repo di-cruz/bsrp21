@@ -1,0 +1,190 @@
+---
+title: "Project RAD's fixes week"
+output: html_notebook
+---
+
+Loading in Data- Andrew
+```{r}
+library(tidyverse)
+library(taigr)
+prism <- load.from.taiga(data.name='prism-repurposing-20q2-5e60', data.version=5, data.file='primary-screen-replicate-collapsed-logfold-change')
+prism_meta <- load.from.taiga(data.name='prism-repurposing-20q2-5e60', data.version=5, data.file='primary-screen-replicate-collapsed-treatment-info')
+crispr <- load.from.taiga(data.name='public-21q2-110d', data.version=12, data.file='Achilles_gene_effect')
+library(stats)
+```
+
+Creating the inhibitor coorelation table - Andrea, Rohan, Diana
+```{r}
+inhibitors <- prism_meta %>%
+  dplyr::filter(str_detect(moa, "inhibitor")) #Filtering the prism meta data for only inhibitors
+
+cell_lines <- intersect(rownames(prism), rownames(crispr)) #cell lines that are in both dependency and prism
+
+#for july 19, we added the prism 4 code so that we are only looking at prism values that are less than 0. 
+prism_overlap <- prism[cell_lines, inhibitors$column_name]
+prism2 = prism_overlap<0
+prism3 = prism2*prism_overlap
+prism4 = na_if(prism3, 0) #making prism data that is positive, NA
+crispr_overlap <- crispr[cell_lines, ]
+
+correlations <- cor(prism4, crispr_overlap, use = "pairwise.complete.obs") #pairwsie mean ignore missing values if missing in one or the other
+```
+
+Getting the gene names - Diana, Rohan, Andrea
+```{r}
+gene_names = names(correlations[1,])
+```
+
+Maximum value function and loop - Rohan, Andrea, Diana
+```{r}
+highest = function(metadf, column) {
+  max(metadf[,column])
+    return(max(metadf[ ,column]))   
+}
+#function to find the lowest value in a column of a dataframe
+```
+
+Getting corresponding row name  (inhibitor names) -Andrea, Diana, Rohan
+```{r}
+inhibitor_name_finder = function(metadf, column, max_value){
+  for (i in 1:length(metadf[ , 1])){
+    if (metadf[i,column] == max_value) {
+        return(row.names(metadf)[i])
+      }
+  }
+}
+#function that looks from top to bottom, in each row, for something that matches the max gene value
+
+Max_gene= 0
+inhibitor = gene_names #creating a template vector with specified length (gene_names)
+for ( i in 1:length(gene_names)){
+ Max_gene[i] = highest(correlations, gene_names[i])
+ inhibitor[i] = inhibitor_name_finder(correlations, gene_names[i], Max_gene[i])
+  
+}
+#inhibitor loop uses inhibitor_name_finder function to get the row name that corresponds with maximum gene
+#max_gene loop uses function in the correlations matrix for each column and makes the vector max_gene
+```
+
+Making a dataframe with the three vectors - Diana, Rohan, Andrea
+```{r}
+inhibitor_max_gene = data.frame(gene_names, Max_gene, inhibitor)
+#putting gene names, min value, and inhibitor together
+```
+
+Getting data from new dataframe - Rohan, Andrea, Diana
+```{r}
+view(table(inhibitor_max_gene$inhibitor))
+#frequency table
+```
+
+Subsetting for most significant inhibitors - Andrea, Diana, Rohan
+```{r}
+big_inhibitor = inhibitor_min_gene[inhibitor_min_gene$inhibitor == "BRD-A16035238-001-01-7::2.5::MTS007",]
+#looking specifically at the inhibitor that affects the most based on frequency table
+```
+
+For class: Where should we explore next? Looking at the most frequent inhibitor or lowest correlation values?
+
+For Andrew: Are these all cancer genes?
+What makes a good cancer drug (threshold, versatility of drug, etc.)?
+  -0.2 can be a good cut off
+
+Next steps:
+Subset for cancer genes?
+Assign inhibitors/genes
+
+Interesting gene/inhibitor interactions
+CDKN1A associated with tongue carcinoma. BRD-A16035238-001-01-7::2.5::MTS007 is a MDM inhibitor and targets MDM2. 
+
+CHEK2/ATM associated with P53 pathway. BRD-A16035238-001-01-7::2.5::MTS007 is a MDM inhibitor and targets MDM2. 
+
+BMP8B associated with TGF-betal. BRD-K52989797-003-26-4::2.5::HTS is an OCD drug, but has been found to decrease likelihood of brain cancer.
+
+```{r}
+drug_name = prism_meta[ ,c("column_name","name","indication")]
+drug_name$inhibitor = drug_name$column_name
+drug_name = drug_name[ ,c("inhibitor","name","indication")]
+named_inhibitor_genes = left_join(inhibitor_max_gene, drug_name, "inhibitor")
+```
+
+trying something else
+```{r}
+cell_lines <- intersect(rownames(prism), rownames(crispr)) #cell lines that are in both dependency and prism
+
+prism_overlap <- prism[cell_lines, inhibitors$column_name]
+prism2a = prism_overlap>0
+prism3a = prism2*prism_overlap
+prism4a = na_if(prism3, 0) #making prism data that is positive, NA
+crispr_overlap <- crispr[cell_lines, ]
+
+correlationsa <- cor(prism4, crispr_overlap, use = "pairwise.complete.obs") #pairwsie mean ignore missing values if missing in one or the other
+```
+
+We have all been using this generic code to test for our inhibitors
+```{r}
+library(tidyverse)
+library(taigr)
+prism <- load.from.taiga(data.name='prism-repurposing-20q2-5e60', data.version=5, data.file='primary-screen-replicate-collapsed-logfold-change')
+prism_meta <- load.from.taiga(data.name='prism-repurposing-20q2-5e60', data.version=5, data.file='primary-screen-replicate-collapsed-treatment-info')
+crispr <- load.from.taiga(data.name='public-21q2-110d', data.version=12, data.file='Achilles_gene_effect')
+library(stats)
+expression = load.from.taiga(data.name='public-21q1-4b39',
+                             data.version=33,
+                             data.file='CCLE_expression',
+                             quiet = T)
+metadata = load.from.taiga(data.name='public-21q1-4b39', 
+                           data.version=33, 
+                           data.file='sample_info', 
+                           quiet = T)
+colnames(expression) = stringr::word(colnames(expression), 1) 
+expression = as.data.frame(expression)
+expression$DepMap_ID = rownames(expression)
+mutation = load.from.taiga(data.name = 'public-21q1-4b39',
+                            data.version = 33,
+                            data.file = 'CCLE_mutations',
+                            quiet = T)
+prismdf = as.data.frame(prism)
+prismdf$DepMap_ID = rownames(prism)
+```
+
+Generic code for find and replace
+G E N E
+```{r}
+#subset for G E N E expression and combine with meta
+G E N E = expression[ ,c("G E N E","DepMap_ID")]
+meta_G E N E = inner_join(G E N E, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_G E N E) + geom_boxplot(mapping = aes(primary_disease, G E N E)) + ggtitle("All Cancer G E N E Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+G E N E_Mutation = mutation[mutation$Hugo_Symbol == "G E N E", ]
+N_G E N E_mutation = summarize(group_by(G E N E_Mutation, DepMap_ID), N_G E N E_mutation = n())
+G E N E_Metadata_expression = full_join(N_G E N E_mutation, meta_G E N E, "DepMap_ID")
+G E N E_Metadata_expression$G E N E_mutated =!is.na(G E N E_Metadata_expression$N_G E N E_mutation)
+Final_Dataframe_G E N E = G E N E_Metadata_expression[ ,c("DepMap_ID", "G E N E_mutated", "G E N E", "primary_disease")]
+###Made data frame with expression of G E N E, mutationstatus, cell line, and cancer sub type
+ggplot(Final_Dataframe_G E N E) + geom_boxplot(mapping = aes(G E N E_mutated, G E N E)) + ggtitle("Mutated G E N E Expression") + theme_minimal()
+t.test(G E N E ~ G E N E_mutated, Final_Dataframe_G E N E)
+table(Final_Dataframe_G E N E$G E N E_mutated)
+```
+See if the drug has a difference in impact based on cancer type
+```{r}
+D R U G = prismdf[ ,c("DepMap_ID","I N H I B I T O R N A M E")]
+D R U G_meta = inner_join(Final_Dataframe_G E N E, D R U G, "DepMap_ID")
+ggplot(D R U G_meta) + geom_boxplot(mapping = aes(primary_disease, `I N H I B I T O R N A M E`)) + ggtitle("All Cancer D R U G Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+What about expression level?
+```{r}
+ggplot(D R U G_meta)+geom_point(mapping = aes(G E N E, `I N H I B I T O R N A M E`)) + ggtitle("Drug response based on G E N E expression") + theme_classic()
+cor(D R U G_meta$G E N E,D R U G_meta$`I N H I B I T O R N A M E`,use = "pairwise.complete.obs")
+```
+And Mutation Status?
+```{r}
+ggplot(D R U G_meta)+geom_boxplot(mapping = aes(G E N E_mutated, `I N H I B I T O R N A M E`)) + ggtitle("Drug response based on G E N E Mutation Status") + theme_classic()
+t.test(`I N H I B I T O R N A M E`~ G E N E_mutated, D R U G_meta)
+```
+

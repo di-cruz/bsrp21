@@ -1,0 +1,438 @@
+---
+title: "Personal Exploration part 2"
+output: html_notebook
+---
+
+greater than 0.2 correlation coefficient
+```{r}
+impact_inhibitor = named_inhibitor_genes[named_inhibitor_genes$Max_gene>= 0.2,]
+```
+
+Subset expression for PFKFB3
+```{r}
+###Exploring genes in my gene-inhibitor interactions
+PFKFB3 = expression[ ,c("PFKFB3","DepMap_ID")]
+meta_PFKFB3 = inner_join(PFKFB3, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_PFKFB3) + geom_boxplot(mapping = aes(primary_disease, PFKFB3)) + ggtitle("All Cancer PFKFB3 Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+PFKFB3_Mutation = mutation[mutation$Hugo_Symbol == "PFKFB3", ]
+N_PFKFB3_mutation = summarize(group_by(PFKFB3_Mutation, DepMap_ID), N_PFKFB3_mutation = n())
+PFKFB3_Metadata_expression = full_join(N_PFKFB3_mutation, meta_PFKFB3, "DepMap_ID")
+PFKFB3_Metadata_expression$PFKFB3_mutated =!is.na(PFKFB3_Metadata_expression$N_PFKFB3_mutation)
+Final_Dataframe_PFKFB3 = PFKFB3_Metadata_expression[ ,c("DepMap_ID", "PFKFB3_mutated", "PFKFB3", "primary_disease")]
+table(Final_Dataframe_PFKFB3$PFKFB3_mutated)
+###Made data frame with expression of PFKFB3, mutationstatus, cell line, and cancer sub type
+```
+
+Not many mutated, but if mutated, does that effect expression?
+```{r}
+ggplot(Final_Dataframe_PFKFB3) + geom_boxplot(mapping = aes(PFKFB3_mutated, PFKFB3)) + ggtitle("Mutated PFKFB3 Expression") + theme_minimal()
+t.test(PFKFB3 ~ PFKFB3_mutated, Final_Dataframe_PFKFB3)
+```
+
+See if the drug has a difference in impact based on cancer type
+```{r}
+prismdf = as.data.frame(prism)
+prismdf$DepMap_ID = rownames(prism)
+Vilazodone = prismdf[ ,c("DepMap_ID","BRD-K58010567-003-02-2::2.5::HTS")]
+Vilazodone_meta = inner_join(metadata, Vilazodone, "DepMap_ID")
+ggplot(Vilazodone_meta) + geom_boxplot(mapping = aes(primary_disease, Vilazodone_meta$`BRD-K58010567-003-02-2::2.5::HTS`)) + ggtitle("All Cancer Vilazodone Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+
+okay lets try CCNE1, same code really
+Subset expression for CCNE1
+```{r}
+###Exploring genes in my gene-inhibitor interactions
+CCNE1 = expression[ ,c("CCNE1","DepMap_ID")]
+meta_CCNE1 = inner_join(CCNE1, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_CCNE1) + geom_boxplot(mapping = aes(primary_disease, CCNE1)) + ggtitle("All Cancer CCNE1 Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+#nothing is standing out
+```
+
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+CCNE1_Mutation = mutation[mutation$Hugo_Symbol == "CCNE1", ]
+N_CCNE1_mutation = summarize(group_by(CCNE1_Mutation, DepMap_ID), N_CCNE1_mutation = n())
+CCNE1_Metadata_expression = full_join(N_CCNE1_mutation, meta_CCNE1, "DepMap_ID")
+CCNE1_Metadata_expression$CCNE1_mutated =!is.na(CCNE1_Metadata_expression$N_CCNE1_mutation)
+Final_Dataframe_CCNE1 = CCNE1_Metadata_expression[ ,c("DepMap_ID", "CCNE1_mutated", "CCNE1", "primary_disease")]
+table(Final_Dataframe_CCNE1$CCNE1_mutated)
+###Made data frame with expression of CCNE1, mutationstatus, cell line, and cancer sub type
+```
+
+Not many mutated, but if mutated, does that effect expression?
+```{r}
+ggplot(Final_Dataframe_CCNE1) + geom_boxplot(mapping = aes(CCNE1_mutated, CCNE1)) + ggtitle("Mutated CCNE1 Expression") + theme_minimal()
+t.test(CCNE1 ~ CCNE1_mutated, Final_Dataframe_CCNE1)
+```
+
+How about specifically in ovarian/endometrial
+```{r}
+ovarian_CCNE1 = Final_Dataframe_CCNE1[Final_Dataframe_CCNE1$primary_disease=="Ovarian Cancer",]
+ggplot(ovarian_CCNE1) + geom_boxplot(mapping = aes(CCNE1_mutated, CCNE1)) + ggtitle("Mutated CCNE1 Expression in Ovarian Cancer") + theme_minimal()
+t.test(CCNE1 ~ CCNE1_mutated, Final_Dataframe_CCNE1)
+##When mutated, significantly less expression??? against overall data
+```
+
+See if the drug has a difference in impact based on cancer type
+```{r}
+Triflusal = prismdf[ ,c("DepMap_ID","BRD-K71696703-001-07-9::2.5::MTS007")]
+Triflusal_meta = inner_join(metadata, Triflusal, "DepMap_ID")
+ggplot(Vilazodone_meta) + geom_boxplot(mapping = aes(primary_disease, Triflusal_meta$`BRD-K71696703-001-07-9::2.5::MTS007`)) + ggtitle("All Cancer Triflusal Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+
+What about expression level?
+```{r}
+CCNE1_triflusal = inner_join(Triflusal,CCNE1,"DepMap_ID")
+ggplot(CCNE1_triflusal)+geom_point(mapping = aes(CCNE1, CCNE1_triflusal$`BRD-K71696703-001-07-9::2.5::MTS007`)) + ggtitle("Drug response based on CCNE1 expression") + theme_classic()
+#off the bat, no pattern here
+```
+Subset expression for NANOS3
+```{r}
+###Exploring genes in my gene-inhibitor interactions
+NANOS3 = expression[ ,c("NANOS3","DepMap_ID")]
+meta_NANOS3 = inner_join(NANOS3, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_NANOS3) + geom_boxplot(mapping = aes(primary_disease, NANOS3)) + ggtitle("All Cancer NANOS3 Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+#Neuroblastoma is standing out consistent with literature
+```
+
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+NANOS3_Mutation = mutation[mutation$Hugo_Symbol == "NANOS3", ]
+N_NANOS3_mutation = summarize(group_by(NANOS3_Mutation, DepMap_ID), N_NANOS3_mutation = n())
+NANOS3_Metadata_expression = full_join(N_NANOS3_mutation, meta_NANOS3, "DepMap_ID")
+NANOS3_Metadata_expression$NANOS3_mutated =!is.na(NANOS3_Metadata_expression$N_NANOS3_mutation)
+Final_Dataframe_NANOS3 = NANOS3_Metadata_expression[ ,c("DepMap_ID", "NANOS3_mutated", "NANOS3", "primary_disease")]
+table(Final_Dataframe_NANOS3$NANOS3_mutated)
+###Made data frame with expression of NANOS3, mutationstatus, cell line, and cancer sub type
+#so it's hardly ever mutated, but neuroblastoma are still higher expressed
+```
+
+Not many mutated, but if mutated, does that effect expression?
+```{r}
+ggplot(Final_Dataframe_NANOS3) + geom_boxplot(mapping = aes(NANOS3_mutated, NANOS3)) + ggtitle("Mutated NANOS3 Expression") + theme_minimal()
+t.test(NANOS3 ~ NANOS3_mutated, Final_Dataframe_NANOS3)
+#if mutated even lower expression
+```
+
+See if the drug has a difference in impact based on cancer type
+```{r}
+tranilast = prismdf[ ,c("DepMap_ID","BRD-K17849083-001-32-9::2.43::HTS")]
+tranilast_meta = inner_join(metadata, tranilast, "DepMap_ID")
+ggplot(tranilast_meta) + geom_boxplot(mapping = aes(primary_disease, tranilast_meta$`BRD-K17849083-001-32-9::2.43::HTS`)) + ggtitle("All Cancer tranilast Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+Trying RAB5C now
+```{r}
+###Exploring genes in my gene-inhibitor interactions
+RAB5C = expression[ ,c("RAB5C","DepMap_ID")]
+meta_RAB5C = inner_join(RAB5C, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_RAB5C) + geom_boxplot(mapping = aes(primary_disease, RAB5C)) + ggtitle("All Cancer RAB5C Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+#all have high expression
+```
+
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+RAB5C_Mutation = mutation[mutation$Hugo_Symbol == "RAB5C", ]
+N_RAB5C_mutation = summarize(group_by(RAB5C_Mutation, DepMap_ID), N_RAB5C_mutation = n())
+RAB5C_Metadata_expression = full_join(N_RAB5C_mutation, meta_RAB5C, "DepMap_ID")
+RAB5C_Metadata_expression$RAB5C_mutated =!is.na(RAB5C_Metadata_expression$N_RAB5C_mutation)
+Final_Dataframe_RAB5C = RAB5C_Metadata_expression[ ,c("DepMap_ID", "RAB5C_mutated", "RAB5C", "primary_disease")]
+table(Final_Dataframe_RAB5C$RAB5C_mutated)
+###Made data frame with expression of RAB5C, mutationstatus, cell line, and cancer sub type
+```
+
+Not really mutated
+```{r}
+ggplot(Final_Dataframe_RAB5C) + geom_boxplot(mapping = aes(RAB5C_mutated, RAB5C)) + ggtitle("Mutated RAB5C Expression") + theme_minimal()
+t.test(RAB5C ~ RAB5C_mutated, Final_Dataframe_RAB5C)
+#lol nah
+```
+
+See if the drug has a difference in impact based on cancer type
+```{r}
+tylosin = prismdf[ ,c("DepMap_ID","BRD-K37753391-046-03-2::2.5::HTS")]
+tylosin_meta = inner_join(metadata, tylosin, "DepMap_ID")
+ggplot(tylosin_meta) + geom_boxplot(mapping = aes(primary_disease, tylosin_meta$`BRD-K37753391-046-03-2::2.5::HTS`)) + ggtitle("All Cancer tylosin Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+#all hover around 0
+```
+
+What about expression level?
+```{r}
+RAB5C_tylosin = inner_join(tylosin,RAB5C,"DepMap_ID")
+ggplot(RAB5C_tylosin)+geom_point(mapping = aes(RAB5C, `BRD-K37753391-046-03-2::2.5::HTS`)) + ggtitle("Drug response based on RAB5C expression") + theme_classic()
+#off the bat, no pattern here. Just a blob xoxo gossip girl
+```
+
+Okay next gene, IL31RA
+```{r}
+###Exploring genes in my gene-inhibitor interactions
+IL31RA = expression[ ,c("IL31RA","DepMap_ID")]
+meta_IL31RA = inner_join(IL31RA, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_IL31RA) + geom_boxplot(mapping = aes(primary_disease, IL31RA)) + ggtitle("All Cancer IL31RA Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+#thyroid and brain cancer stand out to me
+```
+
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+IL31RA_Mutation = mutation[mutation$Hugo_Symbol == "IL31RA", ]
+N_IL31RA_mutation = summarize(group_by(IL31RA_Mutation, DepMap_ID), N_IL31RA_mutation = n())
+IL31RA_Metadata_expression = full_join(N_IL31RA_mutation, meta_IL31RA, "DepMap_ID")
+IL31RA_Metadata_expression$IL31RA_mutated =!is.na(IL31RA_Metadata_expression$N_IL31RA_mutation)
+Final_Dataframe_IL31RA = IL31RA_Metadata_expression[ ,c("DepMap_ID", "IL31RA_mutated", "IL31RA", "primary_disease")]
+table(Final_Dataframe_IL31RA$IL31RA_mutated)
+###Made data frame with expression of IL31RA, mutationstatus, cell line, and cancer sub type
+```
+
+Expression based on Mutation status
+```{r}
+ggplot(Final_Dataframe_IL31RA) + geom_boxplot(mapping = aes(IL31RA_mutated, IL31RA)) + ggtitle("Mutated IL31RA Expression") + theme_minimal()
+t.test(IL31RA ~ IL31RA_mutated, Final_Dataframe_IL31RA)
+#less expressed when mutated
+```
+
+See if the drug has a difference in impact based on cancer type
+```{r}
+Vesnarinone = prismdf[ ,c("DepMap_ID","BRD-K13414800-001-01-3::2.499970601::MTS004")]
+Vesnarinone_meta = inner_join(metadata, Vesnarinone, "DepMap_ID")
+ggplot(Vesnarinone_meta) + geom_boxplot(mapping = aes(primary_disease, `BRD-K13414800-001-01-3::2.499970601::MTS004`)) + ggtitle("All Cancer Vesnarinone Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+#not promising
+```
+
+What about expression level?
+```{r}
+IL31RA_Vesnarinone = inner_join(Vesnarinone,IL31RA,"DepMap_ID")
+ggplot(IL31RA_Vesnarinone)+geom_point(mapping = aes(IL31RA, `BRD-K13414800-001-01-3::2.499970601::MTS004`)) + ggtitle("Drug response based on IL31RA expression") + theme_classic()
+IL31RA_Vesnarinone= na.omit(IL31RA_Vesnarinone)
+#off the bat, no pattern here. Just a linear blob on zero xoxo gossip girl
+cor(IL31RA_Vesnarinone$IL31RA,IL31RA_Vesnarinone$`BRD-K13414800-001-01-3::2.499970601::MTS004`)
+#not very correlated
+```
+Only 3 left in this original list omg
+ROPN1L time which is supposedly in endometrial and ovarian
+```{r}
+###Exploring genes in my gene-inhibitor interactions
+ROPN1L = expression[ ,c("ROPN1L","DepMap_ID")]
+meta_ROPN1L = inner_join(ROPN1L, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_ROPN1L) + geom_boxplot(mapping = aes(primary_disease, ROPN1L)) + ggtitle("All Cancer ROPN1L Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+#gallbladder cancer stands out a little
+```
+
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+ROPN1L_Mutation = mutation[mutation$Hugo_Symbol == "ROPN1L", ]
+N_ROPN1L_mutation = summarize(group_by(ROPN1L_Mutation, DepMap_ID), N_ROPN1L_mutation = n())
+ROPN1L_Metadata_expression = full_join(N_ROPN1L_mutation, meta_ROPN1L, "DepMap_ID")
+ROPN1L_Metadata_expression$ROPN1L_mutated =!is.na(ROPN1L_Metadata_expression$N_ROPN1L_mutation)
+Final_Dataframe_ROPN1L = ROPN1L_Metadata_expression[ ,c("DepMap_ID", "ROPN1L_mutated", "ROPN1L", "primary_disease")]
+table(Final_Dataframe_ROPN1L$ROPN1L_mutated)
+###Made data frame with expression of ROPN1L, mutationstatus, cell line, and cancer sub type
+```
+
+Expression based on Mutation status
+```{r}
+ggplot(Final_Dataframe_ROPN1L) + geom_boxplot(mapping = aes(ROPN1L_mutated, ROPN1L)) + ggtitle("Mutated ROPN1L Expression") + theme_minimal()
+t.test(ROPN1L ~ ROPN1L_mutated, Final_Dataframe_ROPN1L)
+#not significant
+```
+
+See if the drug has a difference in impact based on cancer type
+```{r}
+WR99210 = prismdf[ ,c("DepMap_ID","BRD-K45973863-001-01-4::2.5::MTS007")]
+WR99210_meta = inner_join(metadata, WR99210, "DepMap_ID")
+ggplot(WR99210_meta) + geom_boxplot(mapping = aes(primary_disease, `BRD-K45973863-001-01-4::2.5::MTS007`)) + ggtitle("All Cancer WR99210 Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+#not promising
+```
+
+What about expression level?
+```{r}
+ROPN1L_WR99210 = inner_join(WR99210,ROPN1L,"DepMap_ID")
+ggplot(ROPN1L_WR99210)+geom_point(mapping = aes(ROPN1L, `BRD-K45973863-001-01-4::2.5::MTS007`)) + ggtitle("Drug response based on ROPN1L expression") + theme_classic()
+ROPN1L_WR99210= na.omit(ROPN1L_WR99210)
+#off the bat, no pattern here. Just a linear blob on zero xoxo gossip girl
+cor(ROPN1L_WR99210$ROPN1L,ROPN1L_WR99210$`BRD-K45973863-001-01-4::2.5::MTS007`)
+#not very correlated
+```
+
+DHRS3 is downregulated in gastric cancer according to google
+```{r}
+###Exploring genes in my gene-inhibitor interactions
+DHRS3 = expression[ ,c("DHRS3","DepMap_ID")]
+meta_DHRS3 = inner_join(DHRS3, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_DHRS3) + geom_boxplot(mapping = aes(primary_disease, DHRS3)) + ggtitle("All Cancer DHRS3 Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+#this one is all over the place
+```
+
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+DHRS3_Mutation = mutation[mutation$Hugo_Symbol == "DHRS3", ]
+N_DHRS3_mutation = summarize(group_by(DHRS3_Mutation, DepMap_ID), N_DHRS3_mutation = n())
+DHRS3_Metadata_expression = full_join(N_DHRS3_mutation, meta_DHRS3, "DepMap_ID")
+DHRS3_Metadata_expression$DHRS3_mutated =!is.na(DHRS3_Metadata_expression$N_DHRS3_mutation)
+Final_Dataframe_DHRS3 = DHRS3_Metadata_expression[ ,c("DepMap_ID", "DHRS3_mutated", "DHRS3", "primary_disease")]
+table(Final_Dataframe_DHRS3$DHRS3_mutated)
+###Made data frame with expression of DHRS3, mutationstatus, cell line, and cancer sub type
+```
+
+Expression based on Mutation status
+```{r}
+ggplot(Final_Dataframe_DHRS3) + geom_boxplot(mapping = aes(DHRS3_mutated, DHRS3)) + ggtitle("Mutated DHRS3 Expression") + theme_minimal()
+t.test(DHRS3 ~ DHRS3_mutated, Final_Dataframe_DHRS3)
+#not significant
+```
+
+See if the drug has a difference in impact based on cancer type
+```{r}
+Xipamide = prismdf[ ,c("DepMap_ID","BRD-K27393415-001-01-0::2.5::HTS")]
+Xipamide_meta = inner_join(metadata, Xipamide, "DepMap_ID")
+ggplot(Xipamide_meta) + geom_boxplot(mapping = aes(primary_disease, `BRD-K27393415-001-01-0::2.5::HTS`)) + ggtitle("All Cancer Xipamide Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+#okay but almost all are negative?? maybe this the one !! :) 
+```
+
+What about expression level?
+```{r}
+DHRS3_Xipamide = inner_join(Xipamide,DHRS3,"DepMap_ID")
+ggplot(DHRS3_Xipamide)+geom_point(mapping = aes(DHRS3, `BRD-K27393415-001-01-0::2.5::HTS`)) + ggtitle("Drug response based on DHRS3 expression") + theme_classic()
+DHRS3_Xipamide= na.omit(DHRS3_Xipamide)
+#off the bat, no pattern here BUT most seem negative
+cor(DHRS3_Xipamide$DHRS3,DHRS3_Xipamide$`BRD-K27393415-001-01-0::2.5::HTS`)
+#not very correlated
+```
+
+last of the originals: KRT14
+```{r}
+###Exploring genes in my gene-inhibitor interactions
+KRT14 = expression[ ,c("KRT14","DepMap_ID")]
+meta_KRT14 = inner_join(KRT14, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_KRT14) + geom_boxplot(mapping = aes(primary_disease, KRT14)) + ggtitle("All Cancer KRT14 Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+#head and neck is POPPING off omg
+```
+
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+KRT14_Mutation = mutation[mutation$Hugo_Symbol == "KRT14", ]
+N_KRT14_mutation = summarize(group_by(KRT14_Mutation, DepMap_ID), N_KRT14_mutation = n())
+KRT14_Metadata_expression = full_join(N_KRT14_mutation, meta_KRT14, "DepMap_ID")
+KRT14_Metadata_expression$KRT14_mutated =!is.na(KRT14_Metadata_expression$N_KRT14_mutation)
+Final_Dataframe_KRT14 = KRT14_Metadata_expression[ ,c("DepMap_ID", "KRT14_mutated", "KRT14", "primary_disease")]
+table(Final_Dataframe_KRT14$KRT14_mutated)
+###Made data frame with expression of KRT14, mutationstatus, cell line, and cancer sub type
+```
+
+Expression based on Mutation status
+```{r}
+ggplot(Final_Dataframe_KRT14) + geom_boxplot(mapping = aes(KRT14_mutated, KRT14)) + ggtitle("Mutated KRT14 Expression") + theme_minimal()
+t.test(KRT14 ~ KRT14_mutated, Final_Dataframe_KRT14)
+#not significant
+```
+
+See if the drug has a difference in impact based on cancer type
+```{r}
+Vigabatrin = prismdf[ ,c("DepMap_ID","BRD-A07893380-213-01-7::2.5::HTS")]
+Vigabatrin_meta = inner_join(metadata, Vigabatrin, "DepMap_ID")
+ggplot(Vigabatrin_meta) + geom_boxplot(mapping = aes(primary_disease, `BRD-A07893380-213-01-7::2.5::HTS`)) + ggtitle("All Cancer Vigabatrin Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+ggplot(Vigabatrin_meta) + geom_boxplot(mapping = aes(primary_or_metastasis, `BRD-A07893380-213-01-7::2.5::HTS`)) + ggtitle("All Cancer Vigabatrin Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+#okay but almost all are negative?? maybe this the one !! :) 
+```
+
+What about expression level?
+```{r}
+KRT14_Vigabatrin = inner_join(Vigabatrin,KRT14,"DepMap_ID")
+ggplot(KRT14_Vigabatrin)+geom_point(mapping = aes(KRT14, `BRD-A07893380-213-01-7::2.5::HTS`)) + ggtitle("Drug response based on KRT14 expression") + theme_classic()
+KRT14_Vigabatrin= na.omit(KRT14_Vigabatrin)
+#off the bat, no pattern here BUT most seem negative
+cor(KRT14_Vigabatrin$KRT14,KRT14_Vigabatrin$`BRD-A07893380-213-01-7::2.5::HTS`)
+#not very correlated
+```
+
+Because my mentor suggested this one and seemed interesting
+SLC33A1
+```{r}
+###Exploring genes in my gene-inhibitor interactions
+SLC33A1 = expression[ ,c("SLC33A1","DepMap_ID")]
+meta_SLC33A1 = inner_join(SLC33A1, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_SLC33A1) + geom_boxplot(mapping = aes(primary_disease, SLC33A1)) + ggtitle("All Cancer SLC33A1 Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+#myeloma is POPPING off omg
+```
+
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+SLC33A1_Mutation = mutation[mutation$Hugo_Symbol == "SLC33A1", ]
+N_SLC33A1_mutation = summarize(group_by(SLC33A1_Mutation, DepMap_ID), N_SLC33A1_mutation = n())
+SLC33A1_Metadata_expression = full_join(N_SLC33A1_mutation, meta_SLC33A1, "DepMap_ID")
+SLC33A1_Metadata_expression$SLC33A1_mutated =!is.na(SLC33A1_Metadata_expression$N_SLC33A1_mutation)
+Final_Dataframe_SLC33A1 = SLC33A1_Metadata_expression[ ,c("DepMap_ID", "SLC33A1_mutated", "SLC33A1", "primary_disease")]
+table(Final_Dataframe_SLC33A1$SLC33A1_mutated)
+###Made data frame with expression of SLC33A1, mutationstatus, cell line, and cancer sub type
+```
+
+Expression based on Mutation status
+```{r}
+ggplot(Final_Dataframe_SLC33A1) + geom_boxplot(mapping = aes(SLC33A1_mutated, SLC33A1)) + ggtitle("Mutated SLC33A1 Expression") + theme_minimal()
+t.test(SLC33A1 ~ SLC33A1_mutated, Final_Dataframe_SLC33A1)
+#not significant
+```
+
+See if the drug has a difference in impact based on cancer type
+```{r}
+Cyclosporin = prismdf[ ,c("DepMap_ID","BRD-A69815203-001-07-6::2.5::HTS")]
+Cyclosporin_meta = inner_join(metadata, Cyclosporin, "DepMap_ID")
+ggplot(Cyclosporin_meta) + geom_boxplot(mapping = aes(primary_disease, `BRD-A69815203-001-07-6::2.5::HTS`)) + ggtitle("All Cancer Cyclosporin Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+ggplot(Cyclosporin_meta) + geom_boxplot(mapping = aes(primary_or_metastasis, `BRD-A69815203-001-07-6::2.5::HTS`)) + ggtitle("All Cancer Cyclosporin Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+#liver?
+```
+
+What about expression level?
+```{r}
+SLC33A1_Cyclosporin = inner_join(Cyclosporin,SLC33A1,"DepMap_ID")
+ggplot(SLC33A1_Cyclosporin)+geom_point(mapping = aes(SLC33A1, `BRD-A69815203-001-07-6::2.5::HTS`)) + ggtitle("Drug response based on SLC33A1 expression") + theme_classic()
+SLC33A1_Cyclosporin= na.omit(SLC33A1_Cyclosporin)
+#off the bat, no pattern here BUT most seem negative
+cor(SLC33A1_Cyclosporin$SLC33A1,SLC33A1_Cyclosporin$`BRD-A69815203-001-07-6::2.5::HTS`)
+#not very correlated
+```
+
+what about specifically esophageal 
+```{r}
+SLC33A1_Cyclosporin_1= inner_join(Cyclosporin_meta, SLC33A1, "DepMap_ID")
+esophageal=SLC33A1_Cyclosporin_1[SLC33A1_Cyclosporin_1$primary_disease=="Esophageal Cancer",]
+ggplot(esophageal)+geom_point(mapping = aes(SLC33A1, `BRD-A69815203-001-07-6::2.5::HTS`)) + ggtitle("Drug response based on SLC33A1 expression in esophageal cancer") + theme_classic()
+```

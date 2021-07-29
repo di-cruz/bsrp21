@@ -1,0 +1,579 @@
+---
+title: "My inhibitor"
+output: html_notebook
+---
+
+BRAF
+```{r}
+#subset for BRAF expression and combine with meta
+BRAF = expression[ ,c("BRAF","DepMap_ID")]
+meta_BRAF = inner_join(BRAF, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_BRAF) + geom_boxplot(mapping = aes(primary_disease, BRAF)) + ggtitle("All Cancer BRAF Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+BRAF_Mutation = mutation[mutation$Hugo_Symbol == "BRAF", ]
+N_BRAF_mutation = summarize(group_by(BRAF_Mutation, DepMap_ID), N_BRAF_mutation = n())
+BRAF_Metadata_expression = full_join(N_BRAF_mutation, meta_BRAF, "DepMap_ID")
+BRAF_Metadata_expression$BRAF_mutated =!is.na(BRAF_Metadata_expression$N_BRAF_mutation)
+Final_Dataframe_BRAF = BRAF_Metadata_expression[ ,c("DepMap_ID", "BRAF_mutated", "BRAF", "primary_disease")]
+###Made data frame with expression of BRAF, mutationstatus, cell line, and cancer sub type
+ggplot(Final_Dataframe_BRAF) + geom_boxplot(mapping = aes(BRAF_mutated, BRAF)) + ggtitle("Mutated BRAF Expression") + theme_minimal()
+t.test(BRAF ~ BRAF_mutated, Final_Dataframe_BRAF)
+table(Final_Dataframe_BRAF$BRAF_mutated)
+```
+See if the drug has a difference in impact based on cancer type
+```{r}
+oxovanadium = prismdf[ ,c("DepMap_ID","BRD-K16180792-001-01-7::2.5::MTS004")]
+oxovanadium_meta_braf = inner_join(Final_Dataframe_BRAF, oxovanadium, "DepMap_ID")
+ggplot(oxovanadium_meta_braf) + geom_boxplot(mapping = aes(primary_disease, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("All Cancer Bis(maltolato)oxovanadium(IV) Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90)) + labs(x= "Cancer Type", y = "Cell Death/Growth")
+```
+
+```{r}
+braincancer = oxovanadium_meta_braf[(oxovanadium_meta_braf$primary_disease == "Skin Cancer"|oxovanadium_meta_braf$primary_disease=="Ovarian Cancer"|oxovanadium_meta_braf$primary_disease=="Endometrial/Uterine Cancer"|oxovanadium_meta_braf$primary_disease== "Liver Cancer"|oxovanadium_meta_braf$primary_disease== "Brain Cancer"),]
+ggplot(braincancer) + geom_boxplot(mapping = aes(primary_disease, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Negative Cancer Bis(maltolato)oxovanadium(IV) Responses") + theme_classic()+theme(axis.text.x = element_text(angle = 90)) + labs(x= "Cancer Type", y = "Cell Death/Growth")
+```
+What about expression level?
+```{r}
+ggplot(oxovanadium_meta_braf)+geom_point(mapping = aes(BRAF, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on BRAF expression") + theme_classic()
+cor(oxovanadium_meta_braf$BRAF,oxovanadium_meta_braf$`BRD-K16180792-001-01-7::2.5::MTS004`,use = "pairwise.complete.obs")
+```
+And Mutation Status?
+```{r}
+ggplot(oxovanadium_meta_braf)+geom_boxplot(mapping = aes(BRAF_mutated, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on BRAF Mutation Status") + theme_classic()
+t.test(`BRD-K16180792-001-01-7::2.5::MTS004`~ BRAF_mutated, oxovanadium_meta_braf)
+## will possible look at BRAF and this drug for mutation. What mutations lead to more product?
+```
+
+Dependency versus prism
+```{r}
+BRAF_dependency = crisprdf[,c("DepMap_ID","BRAF (673)")]
+oxovanadium_dependency = inner_join(BRAF_dependency, oxovanadium_meta, "DepMap_ID")
+ggplot(oxovanadium_dependency)+geom_point(mapping = aes(oxovanadium_dependency$`BRAF (673)`, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on BRAF dependency") + theme_classic()
+cor(oxovanadium_dependency$'BRAF (673)',oxovanadium_dependency$`BRD-K16180792-001-01-7::2.5::MTS004`,use = "pairwise.complete.obs")
+```
+
+C15orf39
+```{r}
+#subset for C15orf39 expression and combine with meta
+C15orf39 = expression[ ,c("C15orf39","DepMap_ID")]
+meta_C15orf39 = inner_join(C15orf39, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_C15orf39) + geom_boxplot(mapping = aes(primary_disease, C15orf39)) + ggtitle("All Cancer C15orf39 Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+C15orf39_Mutation = mutation[mutation$Hugo_Symbol == "C15orf39", ]
+N_C15orf39_mutation = summarize(group_by(C15orf39_Mutation, DepMap_ID), N_C15orf39_mutation = n())
+C15orf39_Metadata_expression = full_join(N_C15orf39_mutation, meta_C15orf39, "DepMap_ID")
+C15orf39_Metadata_expression$C15orf39_mutated =!is.na(C15orf39_Metadata_expression$N_C15orf39_mutation)
+Final_Dataframe_C15orf39 = C15orf39_Metadata_expression[ ,c("DepMap_ID", "C15orf39_mutated", "C15orf39", "primary_disease")]
+###Made data frame with expression of C15orf39, mutationstatus, cell line, and cancer sub type
+ggplot(Final_Dataframe_C15orf39) + geom_boxplot(mapping = aes(C15orf39_mutated, C15orf39)) + ggtitle("Mutated C15orf39 Expression") + theme_minimal()
+t.test(C15orf39 ~ C15orf39_mutated, Final_Dataframe_C15orf39)
+table(Final_Dataframe_C15orf39$C15orf39_mutated)
+```
+See if the drug has a difference in impact based on cancer type
+```{r}
+oxovanadium = prismdf[ ,c("DepMap_ID","BRD-K16180792-001-01-7::2.5::MTS004")]
+oxovanadium_meta = inner_join(Final_Dataframe_C15orf39, oxovanadium, "DepMap_ID")
+ggplot(oxovanadium_meta) + geom_boxplot(mapping = aes(primary_disease, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("All Cancer oxovanadium Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+What about expression level?
+```{r}
+ggplot(oxovanadium_meta)+geom_point(mapping = aes(C15orf39, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on C15orf39 expression") + theme_classic()
+cor(oxovanadium_meta$C15orf39,oxovanadium_meta$`BRD-K16180792-001-01-7::2.5::MTS004`,use = "pairwise.complete.obs")
+```
+And Mutation Status?
+```{r}
+ggplot(oxovanadium_meta)+geom_boxplot(mapping = aes(C15orf39_mutated, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on C15orf39 Mutation Status") + theme_classic()
+t.test(`BRD-K16180792-001-01-7::2.5::MTS004`~ C15orf39_mutated, oxovanadium_meta)
+```
+
+Prism vs Dependency for C15orf39
+```{R}
+C15orf39_dependency = crisprdf[,c("DepMap_ID","C15orf39 (56905)")]
+C15orf39_oxovanadium_dependency = inner_join(C15orf39_dependency, oxovanadium_meta, "DepMap_ID")
+ggplot(C15orf39_oxovanadium_dependency)+geom_point(mapping = aes(C15orf39_oxovanadium_dependency$`C15orf39 (56905)`, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on C15orf39 dependency") + theme_classic()
+cor(C15orf39_oxovanadium_dependency$'C15orf39 (56905)',C15orf39_oxovanadium_dependency$`BRD-K16180792-001-01-7::2.5::MTS004`,use = "pairwise.complete.obs")
+```
+
+TAX1BP1
+```{r}
+#subset for TAX1BP1 expression and combine with meta
+TAX1BP1 = expression[ ,c("TAX1BP1","DepMap_ID")]
+meta_TAX1BP1 = inner_join(TAX1BP1, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_TAX1BP1) + geom_boxplot(mapping = aes(primary_disease, TAX1BP1)) + ggtitle("All Cancer TAX1BP1 Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+TAX1BP1_Mutation = mutation[mutation$Hugo_Symbol == "TAX1BP1", ]
+N_TAX1BP1_mutation = summarize(group_by(TAX1BP1_Mutation, DepMap_ID), N_TAX1BP1_mutation = n())
+TAX1BP1_Metadata_expression = full_join(N_TAX1BP1_mutation, meta_TAX1BP1, "DepMap_ID")
+TAX1BP1_Metadata_expression$TAX1BP1_mutated =!is.na(TAX1BP1_Metadata_expression$N_TAX1BP1_mutation)
+Final_Dataframe_TAX1BP1 = TAX1BP1_Metadata_expression[ ,c("DepMap_ID", "TAX1BP1_mutated", "TAX1BP1", "primary_disease")]
+###Made data frame with expression of TAX1BP1, mutationstatus, cell line, and cancer sub type
+ggplot(Final_Dataframe_TAX1BP1) + geom_boxplot(mapping = aes(TAX1BP1_mutated, TAX1BP1)) + ggtitle("Mutated TAX1BP1 Expression") + theme_minimal()
+t.test(TAX1BP1 ~ TAX1BP1_mutated, Final_Dataframe_TAX1BP1)
+table(Final_Dataframe_TAX1BP1$TAX1BP1_mutated)
+```
+See if the drug has a difference in impact based on cancer type
+```{r}
+oxovanadium = prismdf[ ,c("DepMap_ID","BRD-K16180792-001-01-7::2.5::MTS004")]
+oxovanadium_meta = inner_join(Final_Dataframe_TAX1BP1, oxovanadium, "DepMap_ID")
+ggplot(oxovanadium_meta) + geom_boxplot(mapping = aes(primary_disease, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("All Cancer oxovanadium Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+What about expression level?
+```{r}
+ggplot(oxovanadium_meta)+geom_point(mapping = aes(TAX1BP1, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on TAX1BP1 expression") + theme_classic()
+cor(oxovanadium_meta$TAX1BP1,oxovanadium_meta$`BRD-K16180792-001-01-7::2.5::MTS004`,use = "pairwise.complete.obs")
+```
+And Mutation Status?
+```{r}
+ggplot(oxovanadium_meta)+geom_boxplot(mapping = aes(TAX1BP1_mutated, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on TAX1BP1 Mutation Status") + theme_classic()
+t.test(`BRD-K16180792-001-01-7::2.5::MTS004`~ TAX1BP1_mutated, oxovanadium_meta)
+```
+
+Prism vs Dependency for TAX1BP1
+```{R}
+TAX1BP1_dependency = crisprdf[,c("DepMap_ID","TAX1BP1 (8887)")]
+TAX1BP1_oxovanadium_dependency = inner_join(TAX1BP1_dependency, oxovanadium_meta, "DepMap_ID")
+ggplot(TAX1BP1_oxovanadium_dependency)+geom_point(mapping = aes(TAX1BP1_oxovanadium_dependency$`TAX1BP1 (8887)`, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on TAX1BP1 dependency") + theme_classic()
+cor(TAX1BP1_oxovanadium_dependency$'TAX1BP1 (8887)',TAX1BP1_oxovanadium_dependency$`BRD-K16180792-001-01-7::2.5::MTS004`,use = "pairwise.complete.obs")
+```
+
+EGLN1
+```{r}
+#subset for EGLN1 expression and combine with meta
+EGLN1 = expression[ ,c("EGLN1","DepMap_ID")]
+meta_EGLN1 = inner_join(EGLN1, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_EGLN1) + geom_boxplot(mapping = aes(primary_disease, EGLN1)) + ggtitle("All Cancer EGLN1 Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+EGLN1_Mutation = mutation[mutation$Hugo_Symbol == "EGLN1", ]
+N_EGLN1_mutation = summarize(group_by(EGLN1_Mutation, DepMap_ID), N_EGLN1_mutation = n())
+EGLN1_Metadata_expression = full_join(N_EGLN1_mutation, meta_EGLN1, "DepMap_ID")
+EGLN1_Metadata_expression$EGLN1_mutated =!is.na(EGLN1_Metadata_expression$N_EGLN1_mutation)
+Final_Dataframe_EGLN1 = EGLN1_Metadata_expression[ ,c("DepMap_ID", "EGLN1_mutated", "EGLN1", "primary_disease")]
+###Made data frame with expression of EGLN1, mutationstatus, cell line, and cancer sub type
+ggplot(Final_Dataframe_EGLN1) + geom_boxplot(mapping = aes(EGLN1_mutated, EGLN1)) + ggtitle("Mutated EGLN1 Expression") + theme_minimal()
+t.test(EGLN1 ~ EGLN1_mutated, Final_Dataframe_EGLN1)
+table(Final_Dataframe_EGLN1$EGLN1_mutated)
+```
+See if the drug has a difference in impact based on cancer type
+```{r}
+oxovanadium = prismdf[ ,c("DepMap_ID","BRD-K16180792-001-01-7::2.5::MTS004")]
+oxovanadium_meta_egln1 = inner_join(Final_Dataframe_EGLN1, oxovanadium, "DepMap_ID")
+ggplot(oxovanadium_meta_egln1) + geom_boxplot(mapping = aes(primary_disease, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("All Cancer oxovanadium Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+What about expression level?
+```{r}
+ggplot(oxovanadium_meta_egln1)+geom_point(mapping = aes(EGLN1, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on EGLN1 expression") + theme_classic() +geom_smooth(method=lm,mapping = aes(EGLN1,`BRD-K16180792-001-01-7::2.5::MTS004`), se=FALSE) + labs(x= "EGLN1 Expression", y= "Cell Death/Growth")
+cor.test(oxovanadium_meta_egln1$EGLN1,oxovanadium_meta_egln1$`BRD-K16180792-001-01-7::2.5::MTS004`,use = "pairwise.complete.obs")
+```
+And Mutation Status?
+```{r}
+ggplot(oxovanadium_meta)+geom_boxplot(mapping = aes(EGLN1_mutated, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on EGLN1 Mutation Status") + theme_classic()
+t.test(`BRD-K16180792-001-01-7::2.5::MTS004`~ EGLN1_mutated, oxovanadium_meta)
+```
+
+Prism vs Dependency for EGLN1
+```{R}
+EGLN1_dependency = crisprdf[,c("DepMap_ID","EGLN1 (54583)")]
+EGLN1_oxovanadium_dependency = inner_join(EGLN1_dependency, oxovanadium_meta, "DepMap_ID")
+ggplot(EGLN1_oxovanadium_dependency)+geom_point(mapping = aes(EGLN1_oxovanadium_dependency$`EGLN1 (54583)`, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on EGLN1 dependency") + theme_classic()
+cor(EGLN1_oxovanadium_dependency$'EGLN1 (54583)',EGLN1_oxovanadium_dependency$`BRD-K16180792-001-01-7::2.5::MTS004`,use = "pairwise.complete.obs")
+```
+
+SLC39A1
+```{r}
+#subset for SLC39A1 expression and combine with meta
+SLC39A1 = expression[ ,c("SLC39A1","DepMap_ID")]
+meta_SLC39A1 = inner_join(SLC39A1, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_SLC39A1) + geom_boxplot(mapping = aes(primary_disease, SLC39A1)) + ggtitle("All Cancer SLC39A1 Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+SLC39A1_Mutation = mutation[mutation$Hugo_Symbol == "SLC39A1", ]
+N_SLC39A1_mutation = summarize(group_by(SLC39A1_Mutation, DepMap_ID), N_SLC39A1_mutation = n())
+SLC39A1_Metadata_expression = full_join(N_SLC39A1_mutation, meta_SLC39A1, "DepMap_ID")
+SLC39A1_Metadata_expression$SLC39A1_mutated =!is.na(SLC39A1_Metadata_expression$N_SLC39A1_mutation)
+Final_Dataframe_SLC39A1 = SLC39A1_Metadata_expression[ ,c("DepMap_ID", "SLC39A1_mutated", "SLC39A1", "primary_disease")]
+###Made data frame with expression of SLC39A1, mutationstatus, cell line, and cancer sub type
+ggplot(Final_Dataframe_SLC39A1) + geom_boxplot(mapping = aes(SLC39A1_mutated, SLC39A1)) + ggtitle("Mutated SLC39A1 Expression") + theme_minimal()
+t.test(SLC39A1 ~ SLC39A1_mutated, Final_Dataframe_SLC39A1)
+table(Final_Dataframe_SLC39A1$SLC39A1_mutated)
+```
+See if the drug has a difference in impact based on cancer type
+```{r}
+oxovanadium = prismdf[ ,c("DepMap_ID","BRD-K16180792-001-01-7::2.5::MTS004")]
+oxovanadium_meta = inner_join(Final_Dataframe_SLC39A1, oxovanadium, "DepMap_ID")
+ggplot(oxovanadium_meta) + geom_boxplot(mapping = aes(primary_disease, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("All Cancer oxovanadium Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+What about expression level?
+```{r}
+ggplot(oxovanadium_meta)+geom_point(mapping = aes(SLC39A1, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on SLC39A1 expression") + theme_classic()
+cor(oxovanadium_meta$SLC39A1,oxovanadium_meta$`BRD-K16180792-001-01-7::2.5::MTS004`,use = "pairwise.complete.obs")
+```
+And Mutation Status?
+```{r}
+ggplot(oxovanadium_meta)+geom_boxplot(mapping = aes(SLC39A1_mutated, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on SLC39A1 Mutation Status") + theme_classic()
+t.test(`BRD-K16180792-001-01-7::2.5::MTS004`~ SLC39A1_mutated, oxovanadium_meta)
+```
+
+Prism vs Dependency for SLC39A1
+```{R}
+SLC39A1_dependency = crisprdf[,c("DepMap_ID","SLC39A1 (27173)")]
+SLC39A1_oxovanadium_dependency = inner_join(SLC39A1_dependency, oxovanadium_meta, "DepMap_ID")
+ggplot(SLC39A1_oxovanadium_dependency)+geom_point(mapping = aes(SLC39A1_oxovanadium_dependency$`SLC39A1 (27173)`, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on SLC39A1 dependency") + theme_classic()
+cor(SLC39A1_oxovanadium_dependency$'SLC39A1 (27173)',SLC39A1_oxovanadium_dependency$`BRD-K16180792-001-01-7::2.5::MTS004`,use = "pairwise.complete.obs")
+```
+
+DLX6
+```{r}
+#subset for DLX6 expression and combine with meta
+DLX6 = expression[ ,c("DLX6","DepMap_ID")]
+meta_DLX6 = inner_join(DLX6, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_DLX6) + geom_boxplot(mapping = aes(primary_disease, DLX6)) + ggtitle("All Cancer DLX6 Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+DLX6_Mutation = mutation[mutation$Hugo_Symbol == "DLX6", ]
+N_DLX6_mutation = summarize(group_by(DLX6_Mutation, DepMap_ID), N_DLX6_mutation = n())
+DLX6_Metadata_expression = full_join(N_DLX6_mutation, meta_DLX6, "DepMap_ID")
+DLX6_Metadata_expression$DLX6_mutated =!is.na(DLX6_Metadata_expression$N_DLX6_mutation)
+Final_Dataframe_DLX6 = DLX6_Metadata_expression[ ,c("DepMap_ID", "DLX6_mutated", "DLX6", "primary_disease")]
+###Made data frame with expression of DLX6, mutationstatus, cell line, and cancer sub type
+ggplot(Final_Dataframe_DLX6) + geom_boxplot(mapping = aes(DLX6_mutated, DLX6)) + ggtitle("Mutated DLX6 Expression") + theme_minimal()
+t.test(DLX6 ~ DLX6_mutated, Final_Dataframe_DLX6)
+table(Final_Dataframe_DLX6$DLX6_mutated)
+```
+See if the drug has a difference in impact based on cancer type
+```{r}
+oxovanadium = prismdf[ ,c("DepMap_ID","BRD-K16180792-001-01-7::2.5::MTS004")]
+oxovanadium_meta = inner_join(Final_Dataframe_DLX6, oxovanadium, "DepMap_ID")
+ggplot(oxovanadium_meta) + geom_boxplot(mapping = aes(primary_disease, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("All Cancer oxovanadium Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+What about expression level?
+```{r}
+ggplot(oxovanadium_meta)+geom_point(mapping = aes(DLX6, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on DLX6 expression") + theme_classic()
+cor(oxovanadium_meta$DLX6,oxovanadium_meta$`BRD-K16180792-001-01-7::2.5::MTS004`,use = "pairwise.complete.obs")
+```
+And Mutation Status?
+```{r}
+ggplot(oxovanadium_meta)+geom_boxplot(mapping = aes(DLX6_mutated, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on DLX6 Mutation Status") + theme_classic()
+t.test(`BRD-K16180792-001-01-7::2.5::MTS004`~ DLX6_mutated, oxovanadium_meta)
+```
+
+Prism vs Dependency for DLX6
+```{R}
+DLX6_dependency = crisprdf[,c("DepMap_ID","DLX6 (1750)")]
+DLX6_oxovanadium_dependency = inner_join(DLX6_dependency, oxovanadium_meta, "DepMap_ID")
+ggplot(DLX6_oxovanadium_dependency)+geom_point(mapping = aes(DLX6_oxovanadium_dependency$`DLX6 (1750)`, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on DLX6 dependency") + theme_classic()
+cor(DLX6_oxovanadium_dependency$'DLX6 (1750)',DLX6_oxovanadium_dependency$`BRD-K16180792-001-01-7::2.5::MTS004`,use = "pairwise.complete.obs")
+```
+
+SEMA3E
+```{r}
+#subset for SEMA3E expression and combine with meta
+SEMA3E = expression[ ,c("SEMA3E","DepMap_ID")]
+meta_SEMA3E = inner_join(SEMA3E, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_SEMA3E) + geom_boxplot(mapping = aes(primary_disease, SEMA3E)) + ggtitle("All Cancer SEMA3E Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+SEMA3E_Mutation = mutation[mutation$Hugo_Symbol == "SEMA3E", ]
+N_SEMA3E_mutation = summarize(group_by(SEMA3E_Mutation, DepMap_ID), N_SEMA3E_mutation = n())
+SEMA3E_Metadata_expression = full_join(N_SEMA3E_mutation, meta_SEMA3E, "DepMap_ID")
+SEMA3E_Metadata_expression$SEMA3E_mutated =!is.na(SEMA3E_Metadata_expression$N_SEMA3E_mutation)
+Final_Dataframe_SEMA3E = SEMA3E_Metadata_expression[ ,c("DepMap_ID", "SEMA3E_mutated", "SEMA3E", "primary_disease")]
+###Made data frame with expression of SEMA3E, mutationstatus, cell line, and cancer sub type
+ggplot(Final_Dataframe_SEMA3E) + geom_boxplot(mapping = aes(SEMA3E_mutated, SEMA3E)) + ggtitle("Mutated SEMA3E Expression") + theme_minimal()
+t.test(SEMA3E ~ SEMA3E_mutated, Final_Dataframe_SEMA3E)
+table(Final_Dataframe_SEMA3E$SEMA3E_mutated)
+```
+See if the drug has a difference in impact based on cancer type
+```{r}
+oxovanadium = prismdf[ ,c("DepMap_ID","BRD-K16180792-001-01-7::2.5::MTS004")]
+oxovanadium_meta = inner_join(Final_Dataframe_SEMA3E, oxovanadium, "DepMap_ID")
+ggplot(oxovanadium_meta) + geom_boxplot(mapping = aes(primary_disease, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("All Cancer oxovanadium Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+What about expression level?
+```{r}
+ggplot(oxovanadium_meta)+geom_point(mapping = aes(SEMA3E, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on SEMA3E expression") + theme_classic()
+cor(oxovanadium_meta$SEMA3E,oxovanadium_meta$`BRD-K16180792-001-01-7::2.5::MTS004`,use = "pairwise.complete.obs")
+```
+And Mutation Status?
+```{r}
+ggplot(oxovanadium_meta)+geom_boxplot(mapping = aes(SEMA3E_mutated, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on SEMA3E Mutation Status") + theme_classic()
+t.test(`BRD-K16180792-001-01-7::2.5::MTS004`~ SEMA3E_mutated, oxovanadium_meta)
+```
+
+Prism vs Dependency for SEMA3E
+```{R}
+SEMA3E_dependency = crisprdf[,c("DepMap_ID","SEMA3E (9723)")]
+SEMA3E_oxovanadium_dependency = inner_join(SEMA3E_dependency, oxovanadium_meta, "DepMap_ID")
+ggplot(SEMA3E_oxovanadium_dependency)+geom_point(mapping = aes(SEMA3E_oxovanadium_dependency$`SEMA3E (9723)`, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on SEMA3E dependency") + theme_classic()
+cor(SEMA3E_oxovanadium_dependency$'SEMA3E (9723)',SEMA3E_oxovanadium_dependency$`BRD-K16180792-001-01-7::2.5::MTS004`,use = "pairwise.complete.obs")
+```
+
+AMH
+```{r}
+#subset for AMH expression and combine with meta
+AMH = expression[ ,c("AMH","DepMap_ID")]
+meta_AMH = inner_join(AMH, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_AMH) + geom_boxplot(mapping = aes(primary_disease, AMH)) + ggtitle("All Cancer AMH Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+AMH_Mutation = mutation[mutation$Hugo_Symbol == "AMH", ]
+N_AMH_mutation = summarize(group_by(AMH_Mutation, DepMap_ID), N_AMH_mutation = n())
+AMH_Metadata_expression = full_join(N_AMH_mutation, meta_AMH, "DepMap_ID")
+AMH_Metadata_expression$AMH_mutated =!is.na(AMH_Metadata_expression$N_AMH_mutation)
+Final_Dataframe_AMH = AMH_Metadata_expression[ ,c("DepMap_ID", "AMH_mutated", "AMH", "primary_disease")]
+###Made data frame with expression of AMH, mutationstatus, cell line, and cancer sub type
+ggplot(Final_Dataframe_AMH) + geom_boxplot(mapping = aes(AMH_mutated, AMH)) + ggtitle("Mutated AMH Expression") + theme_minimal()
+t.test(AMH ~ AMH_mutated, Final_Dataframe_AMH)
+table(Final_Dataframe_AMH$AMH_mutated)
+```
+See if the drug has a difference in impact based on cancer type
+```{r}
+oxovanadium = prismdf[ ,c("DepMap_ID","BRD-K16180792-001-01-7::2.5::MTS004")]
+oxovanadium_meta = inner_join(Final_Dataframe_AMH, oxovanadium, "DepMap_ID")
+ggplot(oxovanadium_meta) + geom_boxplot(mapping = aes(primary_disease, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("All Cancer oxovanadium Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+What about expression level?
+```{r}
+ggplot(oxovanadium_meta)+geom_point(mapping = aes(AMH, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on AMH expression") + theme_classic()
+cor(oxovanadium_meta$AMH,oxovanadium_meta$`BRD-K16180792-001-01-7::2.5::MTS004`,use = "pairwise.complete.obs")
+```
+And Mutation Status?
+```{r}
+ggplot(oxovanadium_meta)+geom_boxplot(mapping = aes(AMH_mutated, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on AMH Mutation Status") + theme_classic()
+t.test(`BRD-K16180792-001-01-7::2.5::MTS004`~ AMH_mutated, oxovanadium_meta)
+```
+
+Prism vs Dependency for AMH
+```{R}
+AMH_dependency = crisprdf[,c("DepMap_ID","AMH (268)")]
+AMH_oxovanadium_dependency = inner_join(AMH_dependency, oxovanadium_meta, "DepMap_ID")
+ggplot(AMH_oxovanadium_dependency)+geom_point(mapping = aes(AMH_oxovanadium_dependency$`AMH (268)`, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on AMH dependency") + theme_classic()
+cor(AMH_oxovanadium_dependency$'AMH (268)',AMH_oxovanadium_dependency$`BRD-K16180792-001-01-7::2.5::MTS004`,use = "pairwise.complete.obs")
+```
+
+Just the three cancers
+```{r}
+oxovanadium_meta1 = oxovanadium_meta[oxovanadium_meta$primary_disease == c("Skin Cancer","Ovarian Cancer","Endometrial/Uterine Cancer"),]
+ggplot(oxovanadium_meta1) + geom_boxplot(mapping = aes(primary_disease, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Big Cancer oxovanadium Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+
+What about expression level?
+```{r}
+ggplot(oxovanadium_meta1)+geom_point(mapping = aes(BRAF, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on BRAF expression") + theme_classic()
+cor(oxovanadium_meta1$BRAF,oxovanadium_meta1$`BRD-K16180792-001-01-7::2.5::MTS004`,use = "pairwise.complete.obs")
+```
+
+And Mutation Status?
+```{r}
+ggplot(oxovanadium_meta1)+geom_boxplot(mapping = aes(BRAF_mutated, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on BRAF Mutation Status") + theme_classic()
+t.test(`BRD-K16180792-001-01-7::2.5::MTS004`~ BRAF_mutated, oxovanadium_meta1)
+## will possible look at BRAF and this drug for mutation. What mutations lead to more product?
+```
+
+Dependency versus prism
+```{r}
+BRAF_dependency = crisprdf[,c("DepMap_ID","BRAF (673)")]
+oxovanadium_dependency = inner_join(BRAF_dependency, oxovanadium_meta1, "DepMap_ID")
+ggplot(oxovanadium_dependency)+geom_point(mapping = aes(oxovanadium_dependency$`BRAF (673)`, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on BRAF dependency") + theme_classic()
+cor(oxovanadium_dependency$'BRAF (673)',oxovanadium_dependency$`BRD-K16180792-001-01-7::2.5::MTS004`,use = "pairwise.complete.obs")
+```
+
+DNAJC21
+```{r}
+#subset for DNAJC21 expression and combine with meta
+DNAJC21 = expression[ ,c("DNAJC21","DepMap_ID")]
+meta_DNAJC21 = inner_join(DNAJC21, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_DNAJC21) + geom_boxplot(mapping = aes(primary_disease, DNAJC21)) + ggtitle("All Cancer DNAJC21 Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+DNAJC21_Mutation = mutation[mutation$Hugo_Symbol == "DNAJC21", ]
+N_DNAJC21_mutation = summarize(group_by(DNAJC21_Mutation, DepMap_ID), N_DNAJC21_mutation = n())
+DNAJC21_Metadata_expression = full_join(N_DNAJC21_mutation, meta_DNAJC21, "DepMap_ID")
+DNAJC21_Metadata_expression$DNAJC21_mutated =!is.na(DNAJC21_Metadata_expression$N_DNAJC21_mutation)
+Final_Dataframe_DNAJC21 = DNAJC21_Metadata_expression[ ,c("DepMap_ID", "DNAJC21_mutated", "DNAJC21", "primary_disease")]
+###Made data frame with expression of DNAJC21, mutationstatus, cell line, and cancer sub type
+ggplot(Final_Dataframe_DNAJC21) + geom_boxplot(mapping = aes(DNAJC21_mutated, DNAJC21)) + ggtitle("Mutated DNAJC21 Expression") + theme_minimal()
+t.test(DNAJC21 ~ DNAJC21_mutated, Final_Dataframe_DNAJC21)
+table(Final_Dataframe_DNAJC21$DNAJC21_mutated)
+```
+See if the drug has a difference in impact based on cancer type
+```{r}
+oxovanadium = prismdf[ ,c("DepMap_ID","BRD-K16180792-001-01-7::2.5::MTS004")]
+oxovanadium_meta = inner_join(Final_Dataframe_DNAJC21, oxovanadium, "DepMap_ID")
+ggplot(oxovanadium_meta) + geom_boxplot(mapping = aes(primary_disease, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("All Cancer oxovanadium Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+What about expression level?
+```{r}
+ggplot(oxovanadium_meta)+geom_point(mapping = aes(DNAJC21, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on DNAJC21 expression") + theme_classic()
+cor(oxovanadium_meta$DNAJC21,oxovanadium_meta$`BRD-K16180792-001-01-7::2.5::MTS004`,use = "pairwise.complete.obs")
+```
+And Mutation Status?
+```{r}
+ggplot(oxovanadium_meta)+geom_boxplot(mapping = aes(DNAJC21_mutated, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on DNAJC21 Mutation Status") + theme_classic()
+t.test(`BRD-K16180792-001-01-7::2.5::MTS004`~ DNAJC21_mutated, oxovanadium_meta)
+```
+
+Prism vs Dependency for DNAJC21
+```{R}
+DNAJC21_dependency = crisprdf[,c("DepMap_ID","DNAJC21 (134218)")]
+DNAJC21_oxovanadium_dependency = inner_join(DNAJC21_dependency, oxovanadium_meta, "DepMap_ID")
+ggplot(DNAJC21_oxovanadium_dependency)+geom_point(mapping = aes(DNAJC21_oxovanadium_dependency$`DNAJC21 (134218)`, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on DNAJC21 dependency") + theme_classic()
+cor(DNAJC21_oxovanadium_dependency$'DNAJC21 (134218)',DNAJC21_oxovanadium_dependency$`BRD-K16180792-001-01-7::2.5::MTS004`,use = "pairwise.complete.obs")
+```
+
+CLDN5
+```{r}
+#subset for CLDN5 expression and combine with meta
+CLDN5 = expression[ ,c("CLDN5","DepMap_ID")]
+meta_CLDN5 = inner_join(CLDN5, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_CLDN5) + geom_boxplot(mapping = aes(primary_disease, CLDN5)) + ggtitle("All Cancer CLDN5 Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+CLDN5_Mutation = mutation[mutation$Hugo_Symbol == "CLDN5", ]
+N_CLDN5_mutation = summarize(group_by(CLDN5_Mutation, DepMap_ID), N_CLDN5_mutation = n())
+CLDN5_Metadata_expression = full_join(N_CLDN5_mutation, meta_CLDN5, "DepMap_ID")
+CLDN5_Metadata_expression$CLDN5_mutated =!is.na(CLDN5_Metadata_expression$N_CLDN5_mutation)
+Final_Dataframe_CLDN5 = CLDN5_Metadata_expression[ ,c("DepMap_ID", "CLDN5_mutated", "CLDN5", "primary_disease")]
+###Made data frame with expression of CLDN5, mutationstatus, cell line, and cancer sub type
+ggplot(Final_Dataframe_CLDN5) + geom_boxplot(mapping = aes(CLDN5_mutated, CLDN5)) + ggtitle("Mutated CLDN5 Expression") + theme_minimal()
+t.test(CLDN5 ~ CLDN5_mutated, Final_Dataframe_CLDN5)
+table(Final_Dataframe_CLDN5$CLDN5_mutated)
+```
+See if the drug has a difference in impact based on cancer type
+```{r}
+oxovanadium = prismdf[ ,c("DepMap_ID","BRD-K16180792-001-01-7::2.5::MTS004")]
+oxovanadium_meta = inner_join(Final_Dataframe_CLDN5, oxovanadium, "DepMap_ID")
+ggplot(oxovanadium_meta) + geom_boxplot(mapping = aes(primary_disease, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("All Cancer oxovanadium Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+What about expression level?
+```{r}
+ggplot(oxovanadium_meta)+geom_point(mapping = aes(CLDN5, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on CLDN5 expression") + theme_classic()
+cor(oxovanadium_meta$CLDN5,oxovanadium_meta$`BRD-K16180792-001-01-7::2.5::MTS004`,use = "pairwise.complete.obs")
+```
+And Mutation Status?
+```{r}
+ggplot(oxovanadium_meta)+geom_boxplot(mapping = aes(CLDN5_mutated, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on CLDN5 Mutation Status") + theme_classic()
+t.test(`BRD-K16180792-001-01-7::2.5::MTS004`~ CLDN5_mutated, oxovanadium_meta)
+```
+
+Prism vs Dependency for CLDN5
+```{R}
+CLDN5_dependency = crisprdf[,c("DepMap_ID","CLDN5 (7122)")]
+CLDN5_oxovanadium_dependency = inner_join(CLDN5_dependency, oxovanadium_meta, "DepMap_ID")
+ggplot(CLDN5_oxovanadium_dependency)+geom_point(mapping = aes(CLDN5_oxovanadium_dependency$`CLDN5 (7122)`, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on CLDN5 dependency") + theme_classic()
+cor.test(CLDN5_oxovanadium_dependency$'CLDN5 (7122)',CLDN5_oxovanadium_dependency$`BRD-K16180792-001-01-7::2.5::MTS004`,use = "pairwise.complete.obs")
+```
+
+mutated BRAF. EGLN1 vs drug
+```{r}
+oxovanadium_meta_braf_mutated = oxovanadium_meta_braf[oxovanadium_meta_braf$BRAF_mutated == "Mutated",]
+oxovanadium_meta_braf_egln1= inner_join(oxovanadium_meta_braf_mutated, oxovanadium_meta_egln1, "DepMap_ID")
+ggplot(oxovanadium_meta_braf_egln1)+geom_point(mapping = aes(EGLN1, `BRD-K16180792-001-01-7::2.5::MTS004.x`)) + ggtitle("Drug response based on EGLN1 expression") + theme_classic() + geom_smooth(method=lm,mapping = aes(EGLN1,`BRD-K16180792-001-01-7::2.5::MTS004.x`), se=FALSE) + labs(x= "EGLN1 Expression", y= "Cell Death/Growth")
+cor.test(oxovanadium_meta_braf_egln1$EGLN1,oxovanadium_meta_braf_egln1$`BRD-K16180792-001-01-7::2.5::MTS004.x`,use = "pairwise.complete.obs")
+```
+Most impacted cancers
+```{r}
+oxovanadium_meta1 = oxovanadium_meta_braf_egln1[oxovanadium_meta_braf_egln1$primary_disease.x == c("Skin Cancer","Ovarian Cancer","Endometrial/Uterine Cancer"),]
+ggplot(oxovanadium_meta1) + geom_boxplot(mapping = aes(primary_disease.x, `BRD-K16180792-001-01-7::2.5::MTS004.x`)) + ggtitle("Big Cancer oxovanadium Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+
+BRAF
+```{r}
+#subset for BRAF expression and combine with meta
+BRAF = expression[ ,c("BRAF","DepMap_ID")]
+meta_BRAF = inner_join(BRAF, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_BRAF) + geom_boxplot(mapping = aes(primary_disease, BRAF)) + ggtitle("All Cancer BRAF Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+BRAF_Mutation = mutation[mutation$Hugo_Symbol == "BRAF", ]
+N_BRAF_mutation = summarize(group_by(BRAF_Mutation, DepMap_ID), N_BRAF_mutation = n())
+BRAF_Metadata_expression = full_join(N_BRAF_mutation, meta_BRAF, "DepMap_ID")
+BRAF_Metadata_expression$BRAF_mutated =!is.na(BRAF_Metadata_expression$N_BRAF_mutation)
+Final_Dataframe_BRAF = BRAF_Metadata_expression[ ,c("DepMap_ID", "BRAF_mutated", "BRAF", "primary_disease")]
+###Made data frame with expression of BRAF, mutationstatus, cell line, and cancer sub type
+ggplot(Final_Dataframe_BRAF) + geom_boxplot(mapping = aes(BRAF_mutated, BRAF)) + ggtitle("Mutated BRAF Expression") + theme_minimal()
+t.test(BRAF ~ BRAF_mutated, Final_Dataframe_BRAF)
+table(Final_Dataframe_BRAF$BRAF_mutated)
+```
+See if the drug has a difference in impact based on cancer type
+```{r}
+PLX8394 = prismdf[ ,c("DepMap_ID","BRD-K53723268-001-01-3::2.49998123248::MTS007")]
+PLX8394_meta = inner_join(Final_Dataframe_BRAF, PLX8394, "DepMap_ID")
+ggplot(PLX8394_meta) + geom_boxplot(mapping = aes(primary_disease, `BRD-K53723268-001-01-3::2.49998123248::MTS007`)) + ggtitle("All Cancer PLX8394 Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+What about expression level?
+```{r}
+ggplot(PLX8394_meta)+geom_point(mapping = aes(BRAF, `BRD-K53723268-001-01-3::2.49998123248::MTS007`)) + ggtitle("Drug response based on BRAF expression") + theme_classic()
+cor(PLX8394_meta$BRAF,PLX8394_meta$`BRD-K53723268-001-01-3::2.49998123248::MTS007`,use = "pairwise.complete.obs")
+```
+And Mutation Status?
+```{r}
+ggplot(PLX8394_meta)+geom_boxplot(mapping = aes(BRAF_mutated, `BRD-K53723268-001-01-3::2.49998123248::MTS007`)) + ggtitle("Drug response based on BRAF Mutation Status") + theme_classic()
+t.test(`BRD-K53723268-001-01-3::2.49998123248::MTS007`~ BRAF_mutated, PLX8394_meta)
+```
+
+Prism vs Dependency for BRAF
+```{R}
+BRAF_dependency = crisprdf[,c("DepMap_ID","BRAF (673)")]
+BRAF_PLX8394_dependency = inner_join(BRAF_dependency, PLX8394_meta, "DepMap_ID")
+ggplot(BRAF_PLX8394_dependency)+geom_point(mapping = aes(BRAF_PLX8394_dependency$`BRAF (673)`, `BRD-K53723268-001-01-3::2.49998123248::MTS007`)) + ggtitle("Drug response based on BRAF dependency") + theme_classic()
+cor(BRAF_PLX8394_dependency$'BRAF (673)',BRAF_PLX8394_dependency$`BRD-K53723268-001-01-3::2.49998123248::MTS007`,use = "pairwise.complete.obs")
+```
+
+mutated BRAF. EGLN1 expression vs drug
+```{r}
+EGLN1_expression = expression[,c("DepMap_ID","EGLN1")]
+```
+
+```{r}
+PLX8394_meta_braf_mutated = PLX8394_meta[PLX8394_meta$BRAF_mutated == TRUE,]
+PLX8394_meta_braf_egln1= inner_join(PLX8394_meta_braf_mutated, EGLN1_expression, "DepMap_ID")
+ggplot(PLX8394_meta_braf_egln1)+geom_point(mapping = aes(EGLN1, `BRD-K53723268-001-01-3::2.49998123248::MTS007`)) + ggtitle("Drug response based on EGLN1 expression") + theme_classic()
+cor(PLX8394_meta_braf_egln1$EGLN1,PLX8394_meta_braf_egln1$`BRD-K53723268-001-01-3::2.49998123248::MTS007`,use = "pairwise.complete.obs")
+```

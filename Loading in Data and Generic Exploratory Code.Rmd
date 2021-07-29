@@ -1,0 +1,82 @@
+---
+title: "Loading in Data and Generic Exploratory Code"
+output: html_notebook
+---
+```{r}
+library(tidyverse)
+library(taigr)
+prism <- load.from.taiga(data.name='prism-repurposing-20q2-5e60', data.version=5, data.file='primary-screen-replicate-collapsed-logfold-change')
+prism_meta <- load.from.taiga(data.name='prism-repurposing-20q2-5e60', data.version=5, data.file='primary-screen-replicate-collapsed-treatment-info')
+crispr <- load.from.taiga(data.name='public-21q2-110d', data.version=12, data.file='Achilles_gene_effect')
+library(stats)
+expression = load.from.taiga(data.name='public-21q1-4b39',
+                             data.version=33,
+                             data.file='CCLE_expression',
+                             quiet = T)
+metadata = load.from.taiga(data.name='public-21q1-4b39', 
+                           data.version=33, 
+                           data.file='sample_info', 
+                           quiet = T)
+colnames(expression) = stringr::word(colnames(expression), 1) 
+expression = as.data.frame(expression)
+expression$DepMap_ID = rownames(expression)
+mutation = load.from.taiga(data.name = 'public-21q1-4b39',
+                            data.version = 33,
+                            data.file = 'CCLE_mutations',
+                            quiet = T)
+prismdf = as.data.frame(prism)
+prismdf$DepMap_ID = rownames(prism)
+if(!require(devtools)) install.packages("devtools")
+devtools::install_github("kassambara/ggpubr")
+library("ggpubr")
+```
+
+Oxovanadium_correlations = correlations[]
+
+Generic code for find and replace
+G E N E
+```{r}
+#subset for G E N E expression and combine with meta
+G E N E = expression[ ,c("G E N E","DepMap_ID")]
+meta_G E N E = inner_join(G E N E, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_G E N E) + geom_boxplot(mapping = aes(primary_disease, G E N E)) + ggtitle("All Cancer G E N E Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+G E N E_Mutation = mutation[mutation$Hugo_Symbol == "G E N E", ]
+N_G E N E_mutation = summarize(group_by(G E N E_Mutation, DepMap_ID), N_G E N E_mutation = n())
+G E N E_Metadata_expression = full_join(N_G E N E_mutation, meta_G E N E, "DepMap_ID")
+G E N E_Metadata_expression$G E N E_mutated =!is.na(G E N E_Metadata_expression$N_G E N E_mutation)
+Final_Dataframe_G E N E = G E N E_Metadata_expression[ ,c("DepMap_ID", "G E N E_mutated", "G E N E", "primary_disease")]
+###Made data frame with expression of G E N E, mutationstatus, cell line, and cancer sub type
+ggplot(Final_Dataframe_G E N E) + geom_boxplot(mapping = aes(G E N E_mutated, G E N E)) + ggtitle("Mutated G E N E Expression") + theme_minimal()
+t.test(G E N E ~ G E N E_mutated, Final_Dataframe_G E N E)
+table(Final_Dataframe_G E N E$G E N E_mutated)
+```
+See if the drug has a difference in impact based on cancer type
+```{r}
+D R U G = prismdf[ ,c("DepMap_ID","I N H I B I T O R N A M E")]
+D R U G_meta = inner_join(Final_Dataframe_G E N E, D R U G, "DepMap_ID")
+ggplot(D R U G_meta) + geom_boxplot(mapping = aes(primary_disease, `I N H I B I T O R N A M E`)) + ggtitle("All Cancer D R U G Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+What about expression level?
+```{r}
+ggplot(D R U G_meta)+geom_point(mapping = aes(G E N E, `I N H I B I T O R N A M E`)) + ggtitle("Drug response based on G E N E expression") + theme_classic()
+cor(D R U G_meta$G E N E,D R U G_meta$`I N H I B I T O R N A M E`,use = "pairwise.complete.obs")
+```
+And Mutation Status?
+```{r}
+ggplot(D R U G_meta)+geom_boxplot(mapping = aes(G E N E_mutated, `I N H I B I T O R N A M E`)) + ggtitle("Drug response based on G E N E Mutation Status") + theme_classic()
+t.test(`I N H I B I T O R N A M E`~ G E N E_mutated, D R U G_meta)
+```
+
+Prism vs Dependency for G E N E
+```{R}
+G E N E_dependency = crisprdf[,c("DepMap_ID","G E N E (number)")]
+G E N E_D R U G_dependency = inner_join(G E N E_dependency, D R U G_meta, "DepMap_ID")
+ggplot(G E N E_D R U G_dependency)+geom_point(mapping = aes(G E N E_D R U G_dependency$`G E N E (number)`, `I N H I B I T O R N A M E`)) + ggtitle("Drug response based on G E N E dependency") + theme_classic()
+cor(G E N E_D R U G_dependency$'G E N E (number)',G E N E_D R U G_dependency$`I N H I B I T O R N A M E`,use = "pairwise.complete.obs")
+```

@@ -1,0 +1,111 @@
+---
+title: "Just Presenting things"
+output: html_notebook
+---
+
+BRAF
+```{r}
+#subset for BRAF expression and combine with meta
+BRAF = expression[ ,c("BRAF","DepMap_ID")]
+meta_BRAF = inner_join(BRAF, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_BRAF) + geom_boxplot(mapping = aes(primary_disease, BRAF)) + ggtitle("All Cancer BRAF Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+BRAF_Mutation = mutation[mutation$Hugo_Symbol == "BRAF", ]
+N_BRAF_mutation = summarize(group_by(BRAF_Mutation, DepMap_ID), N_BRAF_mutation = n())
+BRAF_Metadata_expression = full_join(N_BRAF_mutation, meta_BRAF, "DepMap_ID")
+BRAF_Metadata_expression$BRAF_mutated =!is.na(BRAF_Metadata_expression$N_BRAF_mutation)
+Final_Dataframe_BRAF = BRAF_Metadata_expression[ ,c("DepMap_ID", "BRAF_mutated", "BRAF", "primary_disease")]
+###Made data frame with expression of BRAF, mutationstatus, cell line, and cancer sub type
+ggplot(Final_Dataframe_BRAF) + geom_boxplot(mapping = aes(BRAF_mutated, BRAF)) + ggtitle("Mutated BRAF Expression") + theme_minimal()
+t.test(BRAF ~ BRAF_mutated, Final_Dataframe_BRAF)
+table(Final_Dataframe_BRAF$BRAF_mutated)
+```
+See if the drug has a difference in impact based on cancer type
+```{r}
+oxovanadium = prismdf[ ,c("DepMap_ID","BRD-K16180792-001-01-7::2.5::MTS004")]
+oxovanadium_meta_braf = inner_join(Final_Dataframe_BRAF, oxovanadium, "DepMap_ID")
+oxovanadium_meta_braf$primary_disease =  replace(oxovanadium_meta_braf$primary_disease, oxovanadium_meta_braf$primary_disease == "Bile Duct Cancer", "Bile Duct")
+oxovanadium_meta_braf$primary_disease =  replace(oxovanadium_meta_braf$primary_disease, oxovanadium_meta_braf$primary_disease == "Bladder Cancer", "Bladder")
+oxovanadium_meta_braf$primary_disease =  replace(oxovanadium_meta_braf$primary_disease, oxovanadium_meta_braf$primary_disease == "Bone Cancer", "Bone")
+oxovanadium_meta_braf$primary_disease =  replace(oxovanadium_meta_braf$primary_disease, oxovanadium_meta_braf$primary_disease == "Brain Cancer", "Brain")
+oxovanadium_meta_braf$primary_disease =  replace(oxovanadium_meta_braf$primary_disease, oxovanadium_meta_braf$primary_disease == "Breast Cancer", "Breast")
+oxovanadium_meta_braf$primary_disease =  replace(oxovanadium_meta_braf$primary_disease, oxovanadium_meta_braf$primary_disease == "Colon/Colorectal Cancer", "Colon/Colorectal")
+oxovanadium_meta_braf$primary_disease =  replace(oxovanadium_meta_braf$primary_disease, oxovanadium_meta_braf$primary_disease == "Endometrial/Uterine Cancer", "Endometrial/Uterine")
+oxovanadium_meta_braf$primary_disease =  replace(oxovanadium_meta_braf$primary_disease, oxovanadium_meta_braf$primary_disease == "Esophageal Cancer", "Esophageal")
+oxovanadium_meta_braf$primary_disease =  replace(oxovanadium_meta_braf$primary_disease, oxovanadium_meta_braf$primary_disease == "Gallbladder Cancer", "Gallbladder")
+oxovanadium_meta_braf$primary_disease =  replace(oxovanadium_meta_braf$primary_disease, oxovanadium_meta_braf$primary_disease == "Gastric Cancer", "Gastric")
+oxovanadium_meta_braf$primary_disease =  replace(oxovanadium_meta_braf$primary_disease, oxovanadium_meta_braf$primary_disease == "Head and Neck Cancer", "Head and Neck")
+oxovanadium_meta_braf$primary_disease =  replace(oxovanadium_meta_braf$primary_disease, oxovanadium_meta_braf$primary_disease == "Kidney Cancer", "Kidney")
+oxovanadium_meta_braf$primary_disease =  replace(oxovanadium_meta_braf$primary_disease, oxovanadium_meta_braf$primary_disease == "Liver Cancer", "Liver")
+oxovanadium_meta_braf$primary_disease =  replace(oxovanadium_meta_braf$primary_disease, oxovanadium_meta_braf$primary_disease == "Lung Cancer", "Lung")
+oxovanadium_meta_braf$primary_disease =  replace(oxovanadium_meta_braf$primary_disease, oxovanadium_meta_braf$primary_disease == "Ovarian Cancer", "Ovarian")
+oxovanadium_meta_braf$primary_disease =  replace(oxovanadium_meta_braf$primary_disease, oxovanadium_meta_braf$primary_disease == "Pancreatic Cancer", "Pancreatic")
+oxovanadium_meta_braf$primary_disease =  replace(oxovanadium_meta_braf$primary_disease, oxovanadium_meta_braf$primary_disease == "Prostate Cancer", "Prostate")
+oxovanadium_meta_braf$primary_disease =  replace(oxovanadium_meta_braf$primary_disease, oxovanadium_meta_braf$primary_disease == "Skin Cancer", "Skin")
+oxovanadium_meta_braf$primary_disease =  replace(oxovanadium_meta_braf$primary_disease, oxovanadium_meta_braf$primary_disease == "Thyroid Cancer", "Thyroid")
+ggplot(oxovanadium_meta_braf) + geom_boxplot(mapping = aes(primary_disease, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("All Cancer Bis(maltolato)oxovanadium(IV) Response") + theme_classic()+theme(axis.text.x = element_text(angle = 60, vjust = 0.5)) + labs(x= "Cancer Type", y = "Cell Death/Growth")
+```
+
+```{r}
+braincancer = oxovanadium_meta_braf[(oxovanadium_meta_braf$primary_disease == "Skin Cancer"|oxovanadium_meta_braf$primary_disease=="Ovarian Cancer"|oxovanadium_meta_braf$primary_disease=="Endometrial/Uterine Cancer"|oxovanadium_meta_braf$primary_disease== "Liver Cancer"|oxovanadium_meta_braf$primary_disease== "Brain Cancer"),]
+ggplot(braincancer) + geom_boxplot(mapping = aes(primary_disease, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Negative Cancer Bis(maltolato)oxovanadium(IV) Responses") + theme_classic()+theme(axis.text.x = element_text(angle = 90)) + labs(x= "Cancer Type", y = "Cell Death/Growth")
+```
+What about expression level?
+```{r}
+ggplot(oxovanadium_meta_braf)+geom_point(mapping = aes(BRAF, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on BRAF expression") + theme_classic()
+cor.test(oxovanadium_meta_braf$BRAF,oxovanadium_meta_braf$`BRD-K16180792-001-01-7::2.5::MTS004`,use = "pairwise.complete.obs")
+```
+And Mutation Status?
+```{r}
+oxovanadium_meta_braf$BRAF_mutated = replace(oxovanadium_meta_braf$BRAF_mutated, oxovanadium_meta_braf$BRAF_mutated == TRUE, "Mutated")
+oxovanadium_meta_braf$BRAF_mutated = replace(oxovanadium_meta_braf$BRAF_mutated, oxovanadium_meta_braf$BRAF_mutated == FALSE, "Not Mutated")
+ggplot(oxovanadium_meta_braf)+geom_boxplot(mapping = aes(BRAF_mutated, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on BRAF Mutation Status") + theme_classic() + labs(x= "BRAF Mutation Status", y= "Cell Death/Growth")
+t.test(`BRD-K16180792-001-01-7::2.5::MTS004`~ BRAF_mutated, oxovanadium_meta_braf)
+median(na.omit(oxovanadium_meta_braf_mutated$`BRD-K16180792-001-01-7::2.5::MTS004`))
+oxo_not_mutated = oxovanadium_meta_braf[oxovanadium_meta_braf$BRAF_mutated == "Not Mutated",]
+median(na.omit(oxo_not_mutated$`BRD-K16180792-001-01-7::2.5::MTS004`))
+## will possible look at BRAF and this drug for mutation. What mutations lead to more product?
+```
+
+EGLN1
+```{r}
+#subset for EGLN1 expression and combine with meta
+EGLN1 = expression[ ,c("EGLN1","DepMap_ID")]
+meta_EGLN1 = inner_join(EGLN1, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_EGLN1) + geom_boxplot(mapping = aes(primary_disease, EGLN1)) + ggtitle("All Cancer EGLN1 Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+EGLN1_Mutation = mutation[mutation$Hugo_Symbol == "EGLN1", ]
+N_EGLN1_mutation = summarize(group_by(EGLN1_Mutation, DepMap_ID), N_EGLN1_mutation = n())
+EGLN1_Metadata_expression = full_join(N_EGLN1_mutation, meta_EGLN1, "DepMap_ID")
+EGLN1_Metadata_expression$EGLN1_mutated =!is.na(EGLN1_Metadata_expression$N_EGLN1_mutation)
+Final_Dataframe_EGLN1 = EGLN1_Metadata_expression[ ,c("DepMap_ID", "EGLN1_mutated", "EGLN1", "primary_disease")]
+###Made data frame with expression of EGLN1, mutationstatus, cell line, and cancer sub type
+ggplot(Final_Dataframe_EGLN1) + geom_boxplot(mapping = aes(EGLN1_mutated, EGLN1)) + ggtitle("Mutated EGLN1 Expression") + theme_minimal()
+t.test(EGLN1 ~ EGLN1_mutated, Final_Dataframe_EGLN1)
+table(Final_Dataframe_EGLN1$EGLN1_mutated)
+```
+See if the drug has a difference in impact based on cancer type
+```{r}
+oxovanadium = prismdf[ ,c("DepMap_ID","BRD-K16180792-001-01-7::2.5::MTS004")]
+oxovanadium_meta_egln1 = inner_join(Final_Dataframe_EGLN1, oxovanadium, "DepMap_ID")
+ggplot(oxovanadium_meta_egln1) + geom_boxplot(mapping = aes(primary_disease, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("All Cancer oxovanadium Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+What about expression level?
+```{r}
+ggplot(oxovanadium_meta_egln1)+geom_point(mapping = aes(EGLN1, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on EGLN1 expression") + theme_classic() +geom_smooth(method=lm,mapping = aes(EGLN1,`BRD-K16180792-001-01-7::2.5::MTS004`), se=FALSE) + labs(x= "EGLN1 Expression", y= "Cell Death/Growth")
+#cor.test(oxovanadium_meta_egln1$EGLN1,oxovanadium_meta_egln1$`BRD-K16180792-001-01-7::2.5::MTS004`,use = "pairwise.complete.obs")
+```
+
+```{r}
+
+```

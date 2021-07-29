@@ -1,0 +1,846 @@
+---
+title: "Finding an Inhibitor Part 3"
+output: html_notebook
+---
+
+SVEP1
+```{r}
+#subset for SVEP1 expression and combine with meta
+SVEP1 = expression[ ,c("SVEP1","DepMap_ID")]
+meta_SVEP1 = inner_join(SVEP1, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_SVEP1) + geom_boxplot(mapping = aes(primary_disease, SVEP1)) + ggtitle("All Cancer SVEP1 Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+SVEP1_Mutation = mutation[mutation$Hugo_Symbol == "SVEP1", ]
+N_SVEP1_mutation = summarize(group_by(SVEP1_Mutation, DepMap_ID), N_SVEP1_mutation = n())
+SVEP1_Metadata_expression = full_join(N_SVEP1_mutation, meta_SVEP1, "DepMap_ID")
+SVEP1_Metadata_expression$SVEP1_mutated =!is.na(SVEP1_Metadata_expression$N_SVEP1_mutation)
+Final_Dataframe_SVEP1 = SVEP1_Metadata_expression[ ,c("DepMap_ID", "SVEP1_mutated", "SVEP1", "primary_disease")]
+###Made data frame with expression of SVEP1, mutationstatus, cell line, and cancer sub type
+ggplot(Final_Dataframe_SVEP1) + geom_boxplot(mapping = aes(SVEP1_mutated, SVEP1)) + ggtitle("Mutated SVEP1 Expression") + theme_minimal()
+t.test(SVEP1 ~ SVEP1_mutated, Final_Dataframe_SVEP1)
+table(Final_Dataframe_SVEP1$SVEP1_mutated)
+```
+See if the drug has a difference in impact based on cancer type
+```{r}
+Omega3 = prismdf[ ,c("DepMap_ID","BRD-K31139048-001-03-2::2.5::MTS007")]
+Omega3_meta = inner_join(Final_Dataframe_SVEP1, Omega3, "DepMap_ID")
+ggplot(Omega3_meta) + geom_boxplot(mapping = aes(primary_disease, `BRD-K31139048-001-03-2::2.5::MTS007`)) + ggtitle("All Cancer Omega3 Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+What about expression level?
+```{r}
+ggplot(Omega3_meta)+geom_point(mapping = aes(SVEP1, `BRD-K31139048-001-03-2::2.5::MTS007`)) + ggtitle("Drug response based on SVEP1 expression") + theme_classic()
+cor(Omega3_meta$SVEP1,Omega3_meta$`BRD-K31139048-001-03-2::2.5::MTS007`,use = "pairwise.complete.obs")
+```
+And Mutation Status?
+```{r}
+ggplot(Omega3_meta)+geom_boxplot(mapping = aes(SVEP1_mutated, `BRD-K31139048-001-03-2::2.5::MTS007`)) + ggtitle("Drug response based on SVEP1 Mutation Status") + theme_classic()
+t.test(`BRD-K31139048-001-03-2::2.5::MTS007`~SVEP1_mutated, Omega3_meta)
+```
+
+AP1G1
+```{r}
+#subset for AP1G1 expression and combine with meta
+AP1G1 = expression[ ,c("AP1G1","DepMap_ID")]
+meta_AP1G1 = inner_join(AP1G1, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_AP1G1) + geom_boxplot(mapping = aes(primary_disease, AP1G1)) + ggtitle("All Cancer AP1G1 Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+AP1G1_Mutation = mutation[mutation$Hugo_Symbol == "AP1G1", ]
+N_AP1G1_mutation = summarize(group_by(AP1G1_Mutation, DepMap_ID), N_AP1G1_mutation = n())
+AP1G1_Metadata_expression = full_join(N_AP1G1_mutation, meta_AP1G1, "DepMap_ID")
+AP1G1_Metadata_expression$AP1G1_mutated =!is.na(AP1G1_Metadata_expression$N_AP1G1_mutation)
+Final_Dataframe_AP1G1 = AP1G1_Metadata_expression[ ,c("DepMap_ID", "AP1G1_mutated", "AP1G1", "primary_disease")]
+###Made data frame with expression of AP1G1, mutationstatus, cell line, and cancer sub type
+ggplot(Final_Dataframe_AP1G1) + geom_boxplot(mapping = aes(AP1G1_mutated, AP1G1)) + ggtitle("Mutated AP1G1 Expression") + theme_minimal()
+t.test(AP1G1 ~ AP1G1_mutated, Final_Dataframe_AP1G1)
+```
+See if the drug has a difference in impact based on cancer type
+```{r}
+Cefprozil = prismdf[ ,c("DepMap_ID","BRD-K24871708-002-04-6::2.5::MTS007")]
+Cefprozil_meta = inner_join(Final_Dataframe_AP1G1, Cefprozil, "DepMap_ID")
+ggplot(Cefprozil_meta) + geom_boxplot(mapping = aes(primary_disease, `BRD-K24871708-002-04-6::2.5::MTS007`)) + ggtitle("All Cancer Cefprozil Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+What about expression level?
+```{r}
+ggplot(Cefprozil_meta)+geom_point(mapping = aes(AP1G1, `BRD-K24871708-002-04-6::2.5::MTS007`)) + ggtitle("Drug response based on AP1G1 expression") + theme_classic()
+cor(Cefprozil_meta$AP1G1,Cefprozil_meta$`BRD-K24871708-002-04-6::2.5::MTS007`,use = "pairwise.complete.obs")
+```
+And Mutation Status?
+```{r}
+ggplot(Cefprozil_meta)+geom_boxplot(mapping = aes(AP1G1_mutated, `BRD-K24871708-002-04-6::2.5::MTS007`)) + ggtitle("Drug response based on AP1G1 Mutation Status") + theme_classic()
+t.test(`BRD-K24871708-002-04-6::2.5::MTS007`~ AP1G1_mutated, Cefprozil_meta)
+```
+
+EIF2AK3
+```{r}
+#subset for EIF2AK3 expression and combine with meta
+EIF2AK3 = expression[ ,c("EIF2AK3","DepMap_ID")]
+meta_EIF2AK3 = inner_join(EIF2AK3, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_EIF2AK3) + geom_boxplot(mapping = aes(primary_disease, EIF2AK3)) + ggtitle("All Cancer EIF2AK3 Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+EIF2AK3_Mutation = mutation[mutation$Hugo_Symbol == "EIF2AK3", ]
+N_EIF2AK3_mutation = summarize(group_by(EIF2AK3_Mutation, DepMap_ID), N_EIF2AK3_mutation = n())
+EIF2AK3_Metadata_expression = full_join(N_EIF2AK3_mutation, meta_EIF2AK3, "DepMap_ID")
+EIF2AK3_Metadata_expression$EIF2AK3_mutated =!is.na(EIF2AK3_Metadata_expression$N_EIF2AK3_mutation)
+Final_Dataframe_EIF2AK3 = EIF2AK3_Metadata_expression[ ,c("DepMap_ID", "EIF2AK3_mutated", "EIF2AK3", "primary_disease")]
+###Made data frame with expression of EIF2AK3, mutationstatus, cell line, and cancer sub type
+ggplot(Final_Dataframe_EIF2AK3) + geom_boxplot(mapping = aes(EIF2AK3_mutated, EIF2AK3)) + ggtitle("Mutated EIF2AK3 Expression") + theme_minimal()
+t.test(EIF2AK3 ~ EIF2AK3_mutated, Final_Dataframe_EIF2AK3)
+table(Final_Dataframe_EIF2AK3$EIF2AK3_mutated)
+```
+See if the drug has a difference in impact based on cancer type
+```{r}
+pranoprofen = prismdf[ ,c("DepMap_ID","BRD-A64610707-001-04-4::2.5::HTS")]
+pranoprofen_meta = inner_join(Final_Dataframe_EIF2AK3, pranoprofen, "DepMap_ID")
+ggplot(pranoprofen_meta) + geom_boxplot(mapping = aes(primary_disease, `BRD-A64610707-001-04-4::2.5::HTS`)) + ggtitle("All Cancer pranoprofen Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+What about expression level?
+```{r}
+ggplot(pranoprofen_meta)+geom_point(mapping = aes(EIF2AK3, `BRD-A64610707-001-04-4::2.5::HTS`)) + ggtitle("Drug response based on EIF2AK3 expression") + theme_classic()
+cor(pranoprofen_meta$EIF2AK3,pranoprofen_meta$`BRD-A64610707-001-04-4::2.5::HTS`,use = "pairwise.complete.obs")
+```
+And Mutation Status?
+```{r}
+ggplot(pranoprofen_meta)+geom_boxplot(mapping = aes(EIF2AK3_mutated, `BRD-A64610707-001-04-4::2.5::HTS`)) + ggtitle("Drug response based on EIF2AK3 Mutation Status") + theme_classic()
+t.test(`BRD-A64610707-001-04-4::2.5::HTS`~ EIF2AK3_mutated, pranoprofen_meta)
+```
+
+
+EXT1
+```{r}
+#subset for EXT1 expression and combine with meta
+EXT1 = expression[ ,c("EXT1","DepMap_ID")]
+meta_EXT1 = inner_join(EXT1, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_EXT1) + geom_boxplot(mapping = aes(primary_disease, EXT1)) + ggtitle("All Cancer EXT1 Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+EXT1_Mutation = mutation[mutation$Hugo_Symbol == "EXT1", ]
+N_EXT1_mutation = summarize(group_by(EXT1_Mutation, DepMap_ID), N_EXT1_mutation = n())
+EXT1_Metadata_expression = full_join(N_EXT1_mutation, meta_EXT1, "DepMap_ID")
+EXT1_Metadata_expression$EXT1_mutated =!is.na(EXT1_Metadata_expression$N_EXT1_mutation)
+Final_Dataframe_EXT1 = EXT1_Metadata_expression[ ,c("DepMap_ID", "EXT1_mutated", "EXT1", "primary_disease")]
+###Made data frame with expression of EXT1, mutationstatus, cell line, and cancer sub type
+ggplot(Final_Dataframe_EXT1) + geom_boxplot(mapping = aes(EXT1_mutated, EXT1)) + ggtitle("Mutated EXT1 Expression") + theme_minimal()
+t.test(EXT1 ~ EXT1_mutated, Final_Dataframe_EXT1)
+table(Final_Dataframe_EXT1$EXT1_mutated)
+```
+See if the drug has a difference in impact based on cancer type
+```{r}
+Cefprozil = prismdf[ ,c("DepMap_ID","BRD-K24871708-002-04-6::2.5::MTS007")]
+Cefprozil_meta = inner_join(Final_Dataframe_EXT1, Cefprozil, "DepMap_ID")
+ggplot(Cefprozil_meta) + geom_boxplot(mapping = aes(primary_disease, `BRD-K24871708-002-04-6::2.5::MTS007`)) + ggtitle("All Cancer Cefprozil Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+What about expression level?
+```{r}
+ggplot(Cefprozil_meta)+geom_point(mapping = aes(EXT1, `BRD-K24871708-002-04-6::2.5::MTS007`)) + ggtitle("Drug response based on EXT1 expression") + theme_classic()
+cor(Cefprozil_meta$EXT1,Cefprozil_meta$`BRD-K24871708-002-04-6::2.5::MTS007`,use = "pairwise.complete.obs")
+```
+And Mutation Status?
+```{r}
+ggplot(Cefprozil_meta)+geom_boxplot(mapping = aes(EXT1_mutated, `BRD-K24871708-002-04-6::2.5::MTS007`)) + ggtitle("Drug response based on EXT1 Mutation Status") + theme_classic()
+t.test(`BRD-K24871708-002-04-6::2.5::MTS007`~ EXT1_mutated, Cefprozil_meta)
+```
+
+
+NUDT3
+```{r}
+#subset for NUDT3 expression and combine with meta
+NUDT3 = expression[ ,c("NUDT3","DepMap_ID")]
+meta_NUDT3 = inner_join(NUDT3, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_NUDT3) + geom_boxplot(mapping = aes(primary_disease, NUDT3)) + ggtitle("All Cancer NUDT3 Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+NUDT3_Mutation = mutation[mutation$Hugo_Symbol == "NUDT3", ]
+N_NUDT3_mutation = summarize(group_by(NUDT3_Mutation, DepMap_ID), N_NUDT3_mutation = n())
+NUDT3_Metadata_expression = full_join(N_NUDT3_mutation, meta_NUDT3, "DepMap_ID")
+NUDT3_Metadata_expression$NUDT3_mutated =!is.na(NUDT3_Metadata_expression$N_NUDT3_mutation)
+Final_Dataframe_NUDT3 = NUDT3_Metadata_expression[ ,c("DepMap_ID", "NUDT3_mutated", "NUDT3", "primary_disease")]
+###Made data frame with expression of NUDT3, mutationstatus, cell line, and cancer sub type
+ggplot(Final_Dataframe_NUDT3) + geom_boxplot(mapping = aes(NUDT3_mutated, NUDT3)) + ggtitle("Mutated NUDT3 Expression") + theme_minimal()
+t.test(NUDT3 ~ NUDT3_mutated, Final_Dataframe_NUDT3)
+table(Final_Dataframe_NUDT3$NUDT3_mutated)
+```
+See if the drug has a difference in impact based on cancer type
+```{r}
+aliskiren = prismdf[ ,c("DepMap_ID","BRD-K30020243-051-02-5::2.5::HTS")]
+aliskiren_meta = inner_join(Final_Dataframe_NUDT3, aliskiren, "DepMap_ID")
+ggplot(aliskiren_meta) + geom_boxplot(mapping = aes(primary_disease, `BRD-K30020243-051-02-5::2.5::HTS`)) + ggtitle("All Cancer aliskiren Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+What about expression level?
+```{r}
+ggplot(aliskiren_meta)+geom_point(mapping = aes(NUDT3, `BRD-K30020243-051-02-5::2.5::HTS`)) + ggtitle("Drug response based on NUDT3 expression") + theme_classic()
+cor(aliskiren_meta$NUDT3,aliskiren_meta$`BRD-K30020243-051-02-5::2.5::HTS`,use = "pairwise.complete.obs")
+```
+And Mutation Status?
+```{r}
+ggplot(aliskiren_meta)+geom_boxplot(mapping = aes(NUDT3_mutated, `BRD-K30020243-051-02-5::2.5::HTS`)) + ggtitle("Drug response based on NUDT3 Mutation Status") + theme_classic()
+t.test(`BRD-K30020243-051-02-5::2.5::HTS`~ NUDT3_mutated, aliskiren_meta)
+```
+
+NCAPD3
+```{r}
+#subset for NCAPD3 expression and combine with meta
+NCAPD3 = expression[ ,c("NCAPD3","DepMap_ID")]
+meta_NCAPD3 = inner_join(NCAPD3, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_NCAPD3) + geom_boxplot(mapping = aes(primary_disease, NCAPD3)) + ggtitle("All Cancer NCAPD3 Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+NCAPD3_Mutation = mutation[mutation$Hugo_Symbol == "NCAPD3", ]
+N_NCAPD3_mutation = summarize(group_by(NCAPD3_Mutation, DepMap_ID), N_NCAPD3_mutation = n())
+NCAPD3_Metadata_expression = full_join(N_NCAPD3_mutation, meta_NCAPD3, "DepMap_ID")
+NCAPD3_Metadata_expression$NCAPD3_mutated =!is.na(NCAPD3_Metadata_expression$N_NCAPD3_mutation)
+Final_Dataframe_NCAPD3 = NCAPD3_Metadata_expression[ ,c("DepMap_ID", "NCAPD3_mutated", "NCAPD3", "primary_disease")]
+###Made data frame with expression of NCAPD3, mutationstatus, cell line, and cancer sub type
+ggplot(Final_Dataframe_NCAPD3) + geom_boxplot(mapping = aes(NCAPD3_mutated, NCAPD3)) + ggtitle("Mutated NCAPD3 Expression") + theme_minimal()
+t.test(NCAPD3 ~ NCAPD3_mutated, Final_Dataframe_NCAPD3)
+table(Final_Dataframe_NCAPD3$NCAPD3_mutated)
+```
+See if the drug has a difference in impact based on cancer type
+```{r}
+Cefprozil = prismdf[ ,c("DepMap_ID","BRD-K24871708-002-04-6::2.5::MTS007")]
+Cefprozil_meta = inner_join(Final_Dataframe_NCAPD3, Cefprozil, "DepMap_ID")
+ggplot(Cefprozil_meta) + geom_boxplot(mapping = aes(primary_disease, `BRD-K24871708-002-04-6::2.5::MTS007`)) + ggtitle("All Cancer Cefprozil Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+What about expression level?
+```{r}
+ggplot(Cefprozil_meta)+geom_point(mapping = aes(NCAPD3, `BRD-K24871708-002-04-6::2.5::MTS007`)) + ggtitle("Drug response based on NCAPD3 expression") + theme_classic()
+cor(Cefprozil_meta$NCAPD3,Cefprozil_meta$`BRD-K24871708-002-04-6::2.5::MTS007`,use = "pairwise.complete.obs")
+```
+And Mutation Status?
+```{r}
+ggplot(Cefprozil_meta)+geom_boxplot(mapping = aes(NCAPD3_mutated, `BRD-K24871708-002-04-6::2.5::MTS007`)) + ggtitle("Drug response based on NCAPD3 Mutation Status") + theme_classic()
+t.test(`BRD-K24871708-002-04-6::2.5::MTS007`~ NCAPD3_mutated, Cefprozil_meta)
+```
+
+POLG
+```{r}
+#subset for POLG expression and combine with meta
+POLG = expression[ ,c("POLG","DepMap_ID")]
+meta_POLG = inner_join(POLG, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_POLG) + geom_boxplot(mapping = aes(primary_disease, POLG)) + ggtitle("All Cancer POLG Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+POLG_Mutation = mutation[mutation$Hugo_Symbol == "POLG", ]
+N_POLG_mutation = summarize(group_by(POLG_Mutation, DepMap_ID), N_POLG_mutation = n())
+POLG_Metadata_expression = full_join(N_POLG_mutation, meta_POLG, "DepMap_ID")
+POLG_Metadata_expression$POLG_mutated =!is.na(POLG_Metadata_expression$N_POLG_mutation)
+Final_Dataframe_POLG = POLG_Metadata_expression[ ,c("DepMap_ID", "POLG_mutated", "POLG", "primary_disease")]
+###Made data frame with expression of POLG, mutationstatus, cell line, and cancer sub type
+ggplot(Final_Dataframe_POLG) + geom_boxplot(mapping = aes(POLG_mutated, POLG)) + ggtitle("Mutated POLG Expression") + theme_minimal()
+t.test(POLG ~ POLG_mutated, Final_Dataframe_POLG)
+table(Final_Dataframe_POLG$POLG_mutated)
+```
+See if the drug has a difference in impact based on cancer type
+```{r}
+diloxanide = prismdf[ ,c("DepMap_ID","BRD-K10974103-001-21-1::2.5::HTS")]
+diloxanide_meta = inner_join(Final_Dataframe_POLG, diloxanide, "DepMap_ID")
+ggplot(diloxanide_meta) + geom_boxplot(mapping = aes(primary_disease, `BRD-K10974103-001-21-1::2.5::HTS`)) + ggtitle("All Cancer diloxanide Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+What about expression level?
+```{r}
+ggplot(diloxanide_meta)+geom_point(mapping = aes(POLG, `BRD-K10974103-001-21-1::2.5::HTS`)) + ggtitle("Drug response based on POLG expression") + theme_classic()
+cor(diloxanide_meta$POLG,diloxanide_meta$`BRD-K10974103-001-21-1::2.5::HTS`,use = "pairwise.complete.obs")
+```
+And Mutation Status?
+```{r}
+ggplot(diloxanide_meta)+geom_boxplot(mapping = aes(POLG_mutated, `BRD-K10974103-001-21-1::2.5::HTS`)) + ggtitle("Drug response based on POLG Mutation Status") + theme_classic()
+t.test(`BRD-K10974103-001-21-1::2.5::HTS`~ POLG_mutated, diloxanide_meta)
+```
+
+SLC25A20
+```{r}
+#subset for SLC25A20 expression and combine with meta
+SLC25A20 = expression[ ,c("SLC25A20","DepMap_ID")]
+meta_SLC25A20 = inner_join(SLC25A20, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_SLC25A20) + geom_boxplot(mapping = aes(primary_disease, SLC25A20)) + ggtitle("All Cancer SLC25A20 Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+SLC25A20_Mutation = mutation[mutation$Hugo_Symbol == "SLC25A20", ]
+N_SLC25A20_mutation = summarize(group_by(SLC25A20_Mutation, DepMap_ID), N_SLC25A20_mutation = n())
+SLC25A20_Metadata_expression = full_join(N_SLC25A20_mutation, meta_SLC25A20, "DepMap_ID")
+SLC25A20_Metadata_expression$SLC25A20_mutated =!is.na(SLC25A20_Metadata_expression$N_SLC25A20_mutation)
+Final_Dataframe_SLC25A20 = SLC25A20_Metadata_expression[ ,c("DepMap_ID", "SLC25A20_mutated", "SLC25A20", "primary_disease")]
+###Made data frame with expression of SLC25A20, mutationstatus, cell line, and cancer sub type
+ggplot(Final_Dataframe_SLC25A20) + geom_boxplot(mapping = aes(SLC25A20_mutated, SLC25A20)) + ggtitle("Mutated SLC25A20 Expression") + theme_minimal()
+t.test(SLC25A20 ~ SLC25A20_mutated, Final_Dataframe_SLC25A20)
+table(Final_Dataframe_SLC25A20$SLC25A20_mutated)
+```
+See if the drug has a difference in impact based on cancer type
+```{r}
+aliskiren = prismdf[ ,c("DepMap_ID","BRD-K30020243-051-02-5::2.5::HTS")]
+aliskiren_meta = inner_join(Final_Dataframe_SLC25A20, aliskiren, "DepMap_ID")
+ggplot(aliskiren_meta) + geom_boxplot(mapping = aes(primary_disease, `BRD-K30020243-051-02-5::2.5::HTS`)) + ggtitle("All Cancer aliskiren Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+What about expression level?
+```{r}
+ggplot(aliskiren_meta)+geom_point(mapping = aes(SLC25A20, `BRD-K30020243-051-02-5::2.5::HTS`)) + ggtitle("Drug response based on SLC25A20 expression") + theme_classic()
+cor(aliskiren_meta$SLC25A20,aliskiren_meta$`BRD-K30020243-051-02-5::2.5::HTS`,use = "pairwise.complete.obs")
+```
+And Mutation Status?
+```{r}
+ggplot(aliskiren_meta)+geom_boxplot(mapping = aes(SLC25A20_mutated, `BRD-K30020243-051-02-5::2.5::HTS`)) + ggtitle("Drug response based on SLC25A20 Mutation Status") + theme_classic()
+t.test(`BRD-K30020243-051-02-5::2.5::HTS`~ SLC25A20_mutated, aliskiren_meta)
+```
+
+```{r}
+#BRD-K30020243-051-02-5::2.5::HTS against the gene dependency
+#subset for the gene dependency
+crisprdf = as.data.frame(crispr)
+crisprdf$DepMap_ID = rownames(crisprdf)
+SLC25A20_dependency = crisprdf[,c("DepMap_ID","SLC25A20 (788)")]
+aliskiren_dependency = inner_join(SLC25A20_dependency, aliskiren_meta, "DepMap_ID")
+ggplot(Drug_dependency)+geom_point(mapping = aes(Drug_dependency$`SLC25A20 (788)`, `BRD-K30020243-051-02-5::2.5::HTS`)) + ggtitle("Drug response based on SLC25A20 dependency") + theme_classic()
+```
+
+```{r}
+aliskiren_dependency_prostate = aliskiren_dependency[aliskiren_dependency$primary_disease == "Prostate Cancer",]
+table(aliskiren_dependency_prostate$SLC25A20_mutated)
+```
+
+TRIM39
+```{r}
+#subset for TRIM39 expression and combine with meta
+TRIM39 = expression[ ,c("TRIM39","DepMap_ID")]
+meta_TRIM39 = inner_join(TRIM39, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_TRIM39) + geom_boxplot(mapping = aes(primary_disease, TRIM39)) + ggtitle("All Cancer TRIM39 Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+TRIM39_Mutation = mutation[mutation$Hugo_Symbol == "TRIM39", ]
+N_TRIM39_mutation = summarize(group_by(TRIM39_Mutation, DepMap_ID), N_TRIM39_mutation = n())
+TRIM39_Metadata_expression = full_join(N_TRIM39_mutation, meta_TRIM39, "DepMap_ID")
+TRIM39_Metadata_expression$TRIM39_mutated =!is.na(TRIM39_Metadata_expression$N_TRIM39_mutation)
+Final_Dataframe_TRIM39 = TRIM39_Metadata_expression[ ,c("DepMap_ID", "TRIM39_mutated", "TRIM39", "primary_disease")]
+###Made data frame with expression of TRIM39, mutationstatus, cell line, and cancer sub type
+ggplot(Final_Dataframe_TRIM39) + geom_boxplot(mapping = aes(TRIM39_mutated, TRIM39)) + ggtitle("Mutated TRIM39 Expression") + theme_minimal()
+t.test(TRIM39 ~ TRIM39_mutated, Final_Dataframe_TRIM39)
+table(Final_Dataframe_TRIM39$TRIM39_mutated)
+```
+See if the drug has a difference in impact based on cancer type
+```{r}
+chloramphenicol = prismdf[ ,c("DepMap_ID","BRD-K96424892-001-02-9::2.5::HTS")]
+chloramphenicol_meta = inner_join(Final_Dataframe_TRIM39, chloramphenicol, "DepMap_ID")
+ggplot(chloramphenicol_meta) + geom_boxplot(mapping = aes(primary_disease, `BRD-K96424892-001-02-9::2.5::HTS`)) + ggtitle("All Cancer chloramphenicol Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+What about expression level?
+```{r}
+ggplot(chloramphenicol_meta)+geom_point(mapping = aes(TRIM39, `BRD-K96424892-001-02-9::2.5::HTS`)) + ggtitle("Drug response based on TRIM39 expression") + theme_classic()
+cor(chloramphenicol_meta$TRIM39,chloramphenicol_meta$`BRD-K96424892-001-02-9::2.5::HTS`,use = "pairwise.complete.obs")
+```
+And Mutation Status?
+```{r}
+ggplot(chloramphenicol_meta)+geom_boxplot(mapping = aes(TRIM39_mutated, `BRD-K96424892-001-02-9::2.5::HTS`)) + ggtitle("Drug response based on TRIM39 Mutation Status") + theme_classic()
+t.test(`BRD-K96424892-001-02-9::2.5::HTS`~ TRIM39_mutated, chloramphenicol_meta)
+```
+
+ZNF736
+```{r}
+#subset for ZNF736 expression and combine with meta
+ZNF736 = expression[ ,c("ZNF736","DepMap_ID")]
+meta_ZNF736 = inner_join(ZNF736, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_ZNF736) + geom_boxplot(mapping = aes(primary_disease, ZNF736)) + ggtitle("All Cancer ZNF736 Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+ZNF736_Mutation = mutation[mutation$Hugo_Symbol == "ZNF736", ]
+N_ZNF736_mutation = summarize(group_by(ZNF736_Mutation, DepMap_ID), N_ZNF736_mutation = n())
+ZNF736_Metadata_expression = full_join(N_ZNF736_mutation, meta_ZNF736, "DepMap_ID")
+ZNF736_Metadata_expression$ZNF736_mutated =!is.na(ZNF736_Metadata_expression$N_ZNF736_mutation)
+Final_Dataframe_ZNF736 = ZNF736_Metadata_expression[ ,c("DepMap_ID", "ZNF736_mutated", "ZNF736", "primary_disease")]
+###Made data frame with expression of ZNF736, mutationstatus, cell line, and cancer sub type
+ggplot(Final_Dataframe_ZNF736) + geom_boxplot(mapping = aes(ZNF736_mutated, ZNF736)) + ggtitle("Mutated ZNF736 Expression") + theme_minimal()
+t.test(ZNF736 ~ ZNF736_mutated, Final_Dataframe_ZNF736)
+table(Final_Dataframe_ZNF736$ZNF736_mutated)
+```
+See if the drug has a difference in impact based on cancer type
+```{r}
+diloxanide = prismdf[ ,c("DepMap_ID","BRD-K10974103-001-21-1::2.5::HTS")]
+diloxanide_meta = inner_join(Final_Dataframe_ZNF736, diloxanide, "DepMap_ID")
+ggplot(diloxanide_meta) + geom_boxplot(mapping = aes(primary_disease, `BRD-K10974103-001-21-1::2.5::HTS`)) + ggtitle("All Cancer diloxanide Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+What about expression level?
+```{r}
+ggplot(diloxanide_meta)+geom_point(mapping = aes(ZNF736, `BRD-K10974103-001-21-1::2.5::HTS`)) + ggtitle("Drug response based on ZNF736 expression") + theme_classic()
+cor(diloxanide_meta$ZNF736,diloxanide_meta$`BRD-K10974103-001-21-1::2.5::HTS`,use = "pairwise.complete.obs")
+```
+And Mutation Status?
+```{r}
+ggplot(diloxanide_meta)+geom_boxplot(mapping = aes(ZNF736_mutated, `BRD-K10974103-001-21-1::2.5::HTS`)) + ggtitle("Drug response based on ZNF736 Mutation Status") + theme_classic()
+t.test(`BRD-K10974103-001-21-1::2.5::HTS`~ ZNF736_mutated, diloxanide_meta)
+```
+
+MLEC
+```{r}
+#subset for MLEC expression and combine with meta
+MLEC = expression[ ,c("MLEC","DepMap_ID")]
+meta_MLEC = inner_join(MLEC, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_MLEC) + geom_boxplot(mapping = aes(primary_disease, MLEC)) + ggtitle("All Cancer MLEC Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+MLEC_Mutation = mutation[mutation$Hugo_Symbol == "MLEC", ]
+N_MLEC_mutation = summarize(group_by(MLEC_Mutation, DepMap_ID), N_MLEC_mutation = n())
+MLEC_Metadata_expression = full_join(N_MLEC_mutation, meta_MLEC, "DepMap_ID")
+MLEC_Metadata_expression$MLEC_mutated =!is.na(MLEC_Metadata_expression$N_MLEC_mutation)
+Final_Dataframe_MLEC = MLEC_Metadata_expression[ ,c("DepMap_ID", "MLEC_mutated", "MLEC", "primary_disease")]
+###Made data frame with expression of MLEC, mutationstatus, cell line, and cancer sub type
+ggplot(Final_Dataframe_MLEC) + geom_boxplot(mapping = aes(MLEC_mutated, MLEC)) + ggtitle("Mutated MLEC Expression") + theme_minimal()
+t.test(MLEC ~ MLEC_mutated, Final_Dataframe_MLEC)
+table(Final_Dataframe_MLEC$MLEC_mutated)
+```
+See if the drug has a difference in impact based on cancer type
+```{r}
+Diloxanide = prismdf[ ,c("DepMap_ID","BRD-K10974103-001-21-1::2.5::HTS")]
+Diloxanide_meta = inner_join(Final_Dataframe_MLEC, Diloxanide, "DepMap_ID")
+ggplot(Diloxanide_meta) + geom_boxplot(mapping = aes(primary_disease, `BRD-K10974103-001-21-1::2.5::HTS`)) + ggtitle("All Cancer Diloxanide Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+What about expression level?
+```{r}
+ggplot(Diloxanide_meta)+geom_point(mapping = aes(MLEC, `BRD-K10974103-001-21-1::2.5::HTS`)) + ggtitle("Drug response based on MLEC expression") + theme_classic()
+cor(Diloxanide_meta$MLEC,Diloxanide_meta$`BRD-K10974103-001-21-1::2.5::HTS`,use = "pairwise.complete.obs")
+```
+And Mutation Status?
+```{r}
+ggplot(Diloxanide_meta)+geom_boxplot(mapping = aes(MLEC_mutated, `BRD-K10974103-001-21-1::2.5::HTS`)) + ggtitle("Drug response based on MLEC Mutation Status") + theme_classic()
+t.test(`BRD-K10974103-001-21-1::2.5::HTS`~ MLEC_mutated, Diloxanide_meta)
+```
+
+TPST1
+```{r}
+#subset for TPST1 expression and combine with meta
+TPST1 = expression[ ,c("TPST1","DepMap_ID")]
+meta_TPST1 = inner_join(TPST1, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_TPST1) + geom_boxplot(mapping = aes(primary_disease, TPST1)) + ggtitle("All Cancer TPST1 Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+TPST1_Mutation = mutation[mutation$Hugo_Symbol == "TPST1", ]
+N_TPST1_mutation = summarize(group_by(TPST1_Mutation, DepMap_ID), N_TPST1_mutation = n())
+TPST1_Metadata_expression = full_join(N_TPST1_mutation, meta_TPST1, "DepMap_ID")
+TPST1_Metadata_expression$TPST1_mutated =!is.na(TPST1_Metadata_expression$N_TPST1_mutation)
+Final_Dataframe_TPST1 = TPST1_Metadata_expression[ ,c("DepMap_ID", "TPST1_mutated", "TPST1", "primary_disease")]
+###Made data frame with expression of TPST1, mutationstatus, cell line, and cancer sub type
+ggplot(Final_Dataframe_TPST1) + geom_boxplot(mapping = aes(TPST1_mutated, TPST1)) + ggtitle("Mutated TPST1 Expression") + theme_minimal()
+t.test(TPST1 ~ TPST1_mutated, Final_Dataframe_TPST1)
+table(Final_Dataframe_TPST1$TPST1_mutated)
+```
+See if the drug has a difference in impact based on cancer type
+```{r}
+Diloxanide = prismdf[ ,c("DepMap_ID","BRD-K10974103-001-21-1::2.5::HTS")]
+Diloxanide_meta = inner_join(Final_Dataframe_TPST1, Diloxanide, "DepMap_ID")
+ggplot(Diloxanide_meta) + geom_boxplot(mapping = aes(primary_disease, `BRD-K10974103-001-21-1::2.5::HTS`)) + ggtitle("All Cancer Diloxanide Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+What about expression level?
+```{r}
+ggplot(Diloxanide_meta)+geom_point(mapping = aes(TPST1, `BRD-K10974103-001-21-1::2.5::HTS`)) + ggtitle("Drug response based on TPST1 expression") + theme_classic()
+cor(Diloxanide_meta$TPST1,Diloxanide_meta$`BRD-K10974103-001-21-1::2.5::HTS`,use = "pairwise.complete.obs")
+```
+And Mutation Status?
+```{r}
+ggplot(Diloxanide_meta)+geom_boxplot(mapping = aes(TPST1_mutated, `BRD-K10974103-001-21-1::2.5::HTS`)) + ggtitle("Drug response based on TPST1 Mutation Status") + theme_classic()
+t.test(`BRD-K10974103-001-21-1::2.5::HTS`~ TPST1_mutated, Diloxanide_meta)
+```
+
+TGM2
+```{r}
+#subset for TGM2 expression and combine with meta
+TGM2 = expression[ ,c("TGM2","DepMap_ID")]
+meta_TGM2 = inner_join(TGM2, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_TGM2) + geom_boxplot(mapping = aes(primary_disease, TGM2)) + ggtitle("All Cancer TGM2 Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+TGM2_Mutation = mutation[mutation$Hugo_Symbol == "TGM2", ]
+N_TGM2_mutation = summarize(group_by(TGM2_Mutation, DepMap_ID), N_TGM2_mutation = n())
+TGM2_Metadata_expression = full_join(N_TGM2_mutation, meta_TGM2, "DepMap_ID")
+TGM2_Metadata_expression$TGM2_mutated =!is.na(TGM2_Metadata_expression$N_TGM2_mutation)
+Final_Dataframe_TGM2 = TGM2_Metadata_expression[ ,c("DepMap_ID", "TGM2_mutated", "TGM2", "primary_disease")]
+###Made data frame with expression of TGM2, mutationstatus, cell line, and cancer sub type
+ggplot(Final_Dataframe_TGM2) + geom_boxplot(mapping = aes(TGM2_mutated, TGM2)) + ggtitle("Mutated TGM2 Expression") + theme_minimal()
+t.test(TGM2 ~ TGM2_mutated, Final_Dataframe_TGM2)
+table(Final_Dataframe_TGM2$TGM2_mutated)
+```
+See if the drug has a difference in impact based on cancer type
+```{r}
+Cefprozil = prismdf[ ,c("DepMap_ID","BRD-K24871708-002-04-6::2.5::MTS007")]
+Cefprozil_meta = inner_join(Final_Dataframe_TGM2, Cefprozil, "DepMap_ID")
+ggplot(Cefprozil_meta) + geom_boxplot(mapping = aes(primary_disease, `BRD-K24871708-002-04-6::2.5::MTS007`)) + ggtitle("All Cancer Cefprozil Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+What about expression level?
+```{r}
+ggplot(Cefprozil_meta)+geom_point(mapping = aes(TGM2, `BRD-K24871708-002-04-6::2.5::MTS007`)) + ggtitle("Drug response based on TGM2 expression") + theme_classic()
+cor(Cefprozil_meta$TGM2,Cefprozil_meta$`BRD-K24871708-002-04-6::2.5::MTS007`,use = "pairwise.complete.obs")
+```
+And Mutation Status?
+```{r}
+ggplot(Cefprozil_meta)+geom_boxplot(mapping = aes(TGM2_mutated, `BRD-K24871708-002-04-6::2.5::MTS007`)) + ggtitle("Drug response based on TGM2 Mutation Status") + theme_classic()
+t.test(`BRD-K24871708-002-04-6::2.5::MTS007`~ TGM2_mutated, Cefprozil_meta)
+```
+
+PIGT
+```{r}
+#subset for PIGT expression and combine with meta
+PIGT = expression[ ,c("PIGT","DepMap_ID")]
+meta_PIGT = inner_join(PIGT, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_PIGT) + geom_boxplot(mapping = aes(primary_disease, PIGT)) + ggtitle("All Cancer PIGT Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+PIGT_Mutation = mutation[mutation$Hugo_Symbol == "PIGT", ]
+N_PIGT_mutation = summarize(group_by(PIGT_Mutation, DepMap_ID), N_PIGT_mutation = n())
+PIGT_Metadata_expression = full_join(N_PIGT_mutation, meta_PIGT, "DepMap_ID")
+PIGT_Metadata_expression$PIGT_mutated =!is.na(PIGT_Metadata_expression$N_PIGT_mutation)
+Final_Dataframe_PIGT = PIGT_Metadata_expression[ ,c("DepMap_ID", "PIGT_mutated", "PIGT", "primary_disease")]
+###Made data frame with expression of PIGT, mutationstatus, cell line, and cancer sub type
+ggplot(Final_Dataframe_PIGT) + geom_boxplot(mapping = aes(PIGT_mutated, PIGT)) + ggtitle("Mutated PIGT Expression") + theme_minimal()
+t.test(PIGT ~ PIGT_mutated, Final_Dataframe_PIGT)
+table(Final_Dataframe_PIGT$PIGT_mutated)
+```
+See if the drug has a difference in impact based on cancer type
+```{r}
+cefprozil = prismdf[ ,c("DepMap_ID","BRD-K24871708-002-04-6::2.5::MTS007")]
+cefprozil_meta = inner_join(Final_Dataframe_PIGT, cefprozil, "DepMap_ID")
+ggplot(cefprozil_meta) + geom_boxplot(mapping = aes(primary_disease, `BRD-K24871708-002-04-6::2.5::MTS007`)) + ggtitle("All Cancer cefprozil Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+What about expression level?
+```{r}
+ggplot(cefprozil_meta)+geom_point(mapping = aes(PIGT, `BRD-K24871708-002-04-6::2.5::MTS007`)) + ggtitle("Drug response based on PIGT expression") + theme_classic()
+cor(cefprozil_meta$PIGT,cefprozil_meta$`BRD-K24871708-002-04-6::2.5::MTS007`,use = "pairwise.complete.obs")
+```
+And Mutation Status?
+```{r}
+ggplot(cefprozil_meta)+geom_boxplot(mapping = aes(PIGT_mutated, `BRD-K24871708-002-04-6::2.5::MTS007`)) + ggtitle("Drug response based on PIGT Mutation Status") + theme_classic()
+t.test(`BRD-K24871708-002-04-6::2.5::MTS007`~ PIGT_mutated, cefprozil_meta)
+```
+
+AURKA
+```{r}
+#subset for AURKA expression and combine with meta
+AURKA = expression[ ,c("AURKA","DepMap_ID")]
+meta_AURKA = inner_join(AURKA, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_AURKA) + geom_boxplot(mapping = aes(primary_disease, AURKA)) + ggtitle("All Cancer AURKA Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+AURKA_Mutation = mutation[mutation$Hugo_Symbol == "AURKA", ]
+N_AURKA_mutation = summarize(group_by(AURKA_Mutation, DepMap_ID), N_AURKA_mutation = n())
+AURKA_Metadata_expression = full_join(N_AURKA_mutation, meta_AURKA, "DepMap_ID")
+AURKA_Metadata_expression$AURKA_mutated =!is.na(AURKA_Metadata_expression$N_AURKA_mutation)
+Final_Dataframe_AURKA = AURKA_Metadata_expression[ ,c("DepMap_ID", "AURKA_mutated", "AURKA", "primary_disease")]
+###Made data frame with expression of AURKA, mutationstatus, cell line, and cancer sub type
+ggplot(Final_Dataframe_AURKA) + geom_boxplot(mapping = aes(AURKA_mutated, AURKA)) + ggtitle("Mutated AURKA Expression") + theme_minimal()
+t.test(AURKA ~ AURKA_mutated, Final_Dataframe_AURKA)
+table(Final_Dataframe_AURKA$AURKA_mutated)
+```
+See if the drug has a difference in impact based on cancer type
+```{r}
+cefprozil = prismdf[ ,c("DepMap_ID","BRD-K24871708-002-04-6::2.5::MTS007")]
+cefprozil_meta = inner_join(Final_Dataframe_AURKA, cefprozil, "DepMap_ID")
+ggplot(cefprozil_meta) + geom_boxplot(mapping = aes(primary_disease, `BRD-K24871708-002-04-6::2.5::MTS007`)) + ggtitle("All Cancer cefprozil Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+What about expression level?
+```{r}
+ggplot(cefprozil_meta)+geom_point(mapping = aes(AURKA, `BRD-K24871708-002-04-6::2.5::MTS007`)) + ggtitle("Drug response based on AURKA expression") + theme_classic()
+cor(cefprozil_meta$AURKA,cefprozil_meta$`BRD-K24871708-002-04-6::2.5::MTS007`,use = "pairwise.complete.obs")
+```
+And Mutation Status?
+```{r}
+ggplot(cefprozil_meta)+geom_boxplot(mapping = aes(AURKA_mutated, `BRD-K24871708-002-04-6::2.5::MTS007`)) + ggtitle("Drug response based on AURKA Mutation Status") + theme_classic()
+t.test(`BRD-K24871708-002-04-6::2.5::MTS007`~ AURKA_mutated, cefprozil_meta)
+```
+
+```{r}
+library(tidyverse)
+library(taigr)
+prism <- load.from.taiga(data.name='prism-repurposing-20q2-5e60', data.version=5, data.file='primary-screen-replicate-collapsed-logfold-change')
+prism_meta <- load.from.taiga(data.name='prism-repurposing-20q2-5e60', data.version=5, data.file='primary-screen-replicate-collapsed-treatment-info')
+crispr <- load.from.taiga(data.name='public-21q2-110d', data.version=12, data.file='Achilles_gene_effect')
+library(stats)
+expression = load.from.taiga(data.name='public-21q1-4b39',
+                             data.version=33,
+                             data.file='CCLE_expression',
+                             quiet = T)
+metadata = load.from.taiga(data.name='public-21q1-4b39', 
+                           data.version=33, 
+                           data.file='sample_info', 
+                           quiet = T)
+colnames(expression) = stringr::word(colnames(expression), 1) 
+expression = as.data.frame(expression)
+expression$DepMap_ID = rownames(expression)
+mutation = load.from.taiga(data.name = 'public-21q1-4b39',
+                            data.version = 33,
+                            data.file = 'CCLE_mutations',
+                            quiet = T)
+prismdf = as.data.frame(prism)
+prismdf$DepMap_ID = rownames(prism)
+```
+
+Generic code for find and replace
+OR2J3
+```{r}
+#subset for OR2J3 expression and combine with meta
+OR2J3 = expression[ ,c("OR2J3","DepMap_ID")]
+meta_OR2J3 = inner_join(OR2J3, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_OR2J3) + geom_boxplot(mapping = aes(primary_disease, OR2J3)) + ggtitle("All Cancer OR2J3 Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+OR2J3_Mutation = mutation[mutation$Hugo_Symbol == "OR2J3", ]
+N_OR2J3_mutation = summarize(group_by(OR2J3_Mutation, DepMap_ID), N_OR2J3_mutation = n())
+OR2J3_Metadata_expression = full_join(N_OR2J3_mutation, meta_OR2J3, "DepMap_ID")
+OR2J3_Metadata_expression$OR2J3_mutated =!is.na(OR2J3_Metadata_expression$N_OR2J3_mutation)
+Final_Dataframe_OR2J3 = OR2J3_Metadata_expression[ ,c("DepMap_ID", "OR2J3_mutated", "OR2J3", "primary_disease")]
+###Made data frame with expression of OR2J3, mutationstatus, cell line, and cancer sub type
+ggplot(Final_Dataframe_OR2J3) + geom_boxplot(mapping = aes(OR2J3_mutated, OR2J3)) + ggtitle("Mutated OR2J3 Expression") + theme_minimal()
+t.test(OR2J3 ~ OR2J3_mutated, Final_Dataframe_OR2J3)
+table(Final_Dataframe_OR2J3$OR2J3_mutated)
+```
+See if the drug has a difference in impact based on cancer type
+```{r}
+moclobemide = prismdf[ ,c("DepMap_ID","BRD-K07237224-001-19-6::2.5::HTS")]
+moclobemide_meta = inner_join(Final_Dataframe_OR2J3, moclobemide, "DepMap_ID")
+ggplot(moclobemide_meta) + geom_boxplot(mapping = aes(primary_disease, `BRD-K07237224-001-19-6::2.5::HTS`)) + ggtitle("All Cancer moclobemide Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+What about expression level?
+```{r}
+ggplot(moclobemide_meta)+geom_point(mapping = aes(OR2J3, `BRD-K07237224-001-19-6::2.5::HTS`)) + ggtitle("Drug response based on OR2J3 expression") + theme_classic()
+cor(moclobemide_meta$OR2J3,moclobemide_meta$`BRD-K07237224-001-19-6::2.5::HTS`,use = "pairwise.complete.obs")
+```
+And Mutation Status?
+```{r}
+ggplot(moclobemide_meta)+geom_boxplot(mapping = aes(OR2J3_mutated, `BRD-K07237224-001-19-6::2.5::HTS`)) + ggtitle("Drug response based on OR2J3 Mutation Status") + theme_classic()
+t.test(`BRD-K07237224-001-19-6::2.5::HTS`~ OR2J3_mutated, moclobemide_meta)
+```
+
+```{r}
+library(tidyverse)
+library(taigr)
+prism <- load.from.taiga(data.name='prism-repurposing-20q2-5e60', data.version=5, data.file='primary-screen-replicate-collapsed-logfold-change')
+prism_meta <- load.from.taiga(data.name='prism-repurposing-20q2-5e60', data.version=5, data.file='primary-screen-replicate-collapsed-treatment-info')
+crispr <- load.from.taiga(data.name='public-21q2-110d', data.version=12, data.file='Achilles_gene_effect')
+library(stats)
+expression = load.from.taiga(data.name='public-21q1-4b39',
+                             data.version=33,
+                             data.file='CCLE_expression',
+                             quiet = T)
+metadata = load.from.taiga(data.name='public-21q1-4b39', 
+                           data.version=33, 
+                           data.file='sample_info', 
+                           quiet = T)
+colnames(expression) = stringr::word(colnames(expression), 1) 
+expression = as.data.frame(expression)
+expression$DepMap_ID = rownames(expression)
+mutation = load.from.taiga(data.name = 'public-21q1-4b39',
+                            data.version = 33,
+                            data.file = 'CCLE_mutations',
+                            quiet = T)
+prismdf = as.data.frame(prism)
+prismdf$DepMap_ID = rownames(prism)
+```
+
+Generic code for find and replace
+AURKA
+```{r}
+#subset for AURKA expression and combine with meta
+AURKA = expression[ ,c("AURKA","DepMap_ID")]
+meta_AURKA = inner_join(AURKA, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_AURKA) + geom_boxplot(mapping = aes(primary_disease, AURKA)) + ggtitle("All Cancer AURKA Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+AURKA_Mutation = mutation[mutation$Hugo_Symbol == "AURKA", ]
+N_AURKA_mutation = summarize(group_by(AURKA_Mutation, DepMap_ID), N_AURKA_mutation = n())
+AURKA_Metadata_expression = full_join(N_AURKA_mutation, meta_AURKA, "DepMap_ID")
+AURKA_Metadata_expression$AURKA_mutated =!is.na(AURKA_Metadata_expression$N_AURKA_mutation)
+Final_Dataframe_AURKA = AURKA_Metadata_expression[ ,c("DepMap_ID", "AURKA_mutated", "AURKA", "primary_disease")]
+###Made data frame with expression of AURKA, mutationstatus, cell line, and cancer sub type
+ggplot(Final_Dataframe_AURKA) + geom_boxplot(mapping = aes(AURKA_mutated, AURKA)) + ggtitle("Mutated AURKA Expression") + theme_minimal()
+t.test(AURKA ~ AURKA_mutated, Final_Dataframe_AURKA)
+table(Final_Dataframe_AURKA$AURKA_mutated)
+```
+See if the drug has a difference in impact based on cancer type
+```{r}
+Clemizole = prismdf[ ,c("DepMap_ID","BRD-K04704168-003-14-3::2.5::HTS")]
+Clemizole_meta = inner_join(Final_Dataframe_AURKA, Clemizole, "DepMap_ID")
+ggplot(Clemizole_meta) + geom_boxplot(mapping = aes(primary_disease, `BRD-K04704168-003-14-3::2.5::HTS`)) + ggtitle("All Cancer Clemizole Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+What about expression level?
+```{r}
+ggplot(Clemizole_meta)+geom_point(mapping = aes(AURKA, `BRD-K04704168-003-14-3::2.5::HTS`)) + ggtitle("Drug response based on AURKA expression") + theme_classic()
+cor(Clemizole_meta$AURKA,Clemizole_meta$`BRD-K04704168-003-14-3::2.5::HTS`,use = "pairwise.complete.obs")
+```
+And Mutation Status?
+```{r}
+ggplot(Clemizole_meta)+geom_boxplot(mapping = aes(AURKA_mutated, `BRD-K04704168-003-14-3::2.5::HTS`)) + ggtitle("Drug response based on AURKA Mutation Status") + theme_classic()
+t.test(`BRD-K04704168-003-14-3::2.5::HTS`~ AURKA_mutated, Clemizole_meta)
+```
+
+```{r}
+library(tidyverse)
+library(taigr)
+prism <- load.from.taiga(data.name='prism-repurposing-20q2-5e60', data.version=5, data.file='primary-screen-replicate-collapsed-logfold-change')
+prism_meta <- load.from.taiga(data.name='prism-repurposing-20q2-5e60', data.version=5, data.file='primary-screen-replicate-collapsed-treatment-info')
+crispr <- load.from.taiga(data.name='public-21q2-110d', data.version=12, data.file='Achilles_gene_effect')
+library(stats)
+expression = load.from.taiga(data.name='public-21q1-4b39',
+                             data.version=33,
+                             data.file='CCLE_expression',
+                             quiet = T)
+metadata = load.from.taiga(data.name='public-21q1-4b39', 
+                           data.version=33, 
+                           data.file='sample_info', 
+                           quiet = T)
+colnames(expression) = stringr::word(colnames(expression), 1) 
+expression = as.data.frame(expression)
+expression$DepMap_ID = rownames(expression)
+mutation = load.from.taiga(data.name = 'public-21q1-4b39',
+                            data.version = 33,
+                            data.file = 'CCLE_mutations',
+                            quiet = T)
+prismdf = as.data.frame(prism)
+prismdf$DepMap_ID = rownames(prism)
+```
+
+Generic code for find and replace
+BRAF
+```{r}
+#subset for BRAF expression and combine with meta
+BRAF = expression[ ,c("BRAF","DepMap_ID")]
+meta_BRAF = inner_join(BRAF, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_BRAF) + geom_boxplot(mapping = aes(primary_disease, BRAF)) + ggtitle("All Cancer BRAF Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+BRAF_Mutation = mutation[mutation$Hugo_Symbol == "BRAF", ]
+N_BRAF_mutation = summarize(group_by(BRAF_Mutation, DepMap_ID), N_BRAF_mutation = n())
+BRAF_Metadata_expression = full_join(N_BRAF_mutation, meta_BRAF, "DepMap_ID")
+BRAF_Metadata_expression$BRAF_mutated =!is.na(BRAF_Metadata_expression$N_BRAF_mutation)
+Final_Dataframe_BRAF = BRAF_Metadata_expression[ ,c("DepMap_ID", "BRAF_mutated", "BRAF", "primary_disease")]
+###Made data frame with expression of BRAF, mutationstatus, cell line, and cancer sub type
+ggplot(Final_Dataframe_BRAF) + geom_boxplot(mapping = aes(BRAF_mutated, BRAF)) + ggtitle("Mutated BRAF Expression") + theme_minimal()
+t.test(BRAF ~ BRAF_mutated, Final_Dataframe_BRAF)
+table(Final_Dataframe_BRAF$BRAF_mutated)
+```
+See if the drug has a difference in impact based on cancer type
+```{r}
+oxovanadium = prismdf[ ,c("DepMap_ID","BRD-K16180792-001-01-7::2.5::MTS004")]
+oxovanadium_meta = inner_join(Final_Dataframe_BRAF, oxovanadium, "DepMap_ID")
+ggplot(oxovanadium_meta) + geom_boxplot(mapping = aes(primary_disease, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("All Cancer oxovanadium Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+What about expression level?
+```{r}
+ggplot(oxovanadium_meta)+geom_point(mapping = aes(BRAF, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on BRAF expression") + theme_classic()
+cor(oxovanadium_meta$BRAF,oxovanadium_meta$`BRD-K16180792-001-01-7::2.5::MTS004`,use = "pairwise.complete.obs")
+
+```
+And Mutation Status?
+```{r}
+ggplot(oxovanadium_meta)+geom_boxplot(mapping = aes(BRAF_mutated, `BRD-K16180792-001-01-7::2.5::MTS004`)) + ggtitle("Drug response based on BRAF Mutation Status") + theme_classic()
+t.test(`BRD-K16180792-001-01-7::2.5::MTS004`~ BRAF_mutated, oxovanadium_meta)
+## will possible look at BRAF and this drug for mutation. What mutations lead to more product?
+```
+
+Generic code for find and replace
+DND1
+```{r}
+#subset for DND1 expression and combine with meta
+DND1 = expression[ ,c("DND1","DepMap_ID")]
+meta_DND1 = inner_join(DND1, metadata, "DepMap_ID") #innerjoining metadata with expression
+```
+Graphing the expression level based on cancer
+```{r}
+ggplot(meta_DND1) + geom_boxplot(mapping = aes(primary_disease, DND1)) + ggtitle("All Cancer DND1 Expression") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+Expression based on mutation status, Similar to KRAS analysis
+```{r}
+DND1_Mutation = mutation[mutation$Hugo_Symbol == "DND1", ]
+N_DND1_mutation = summarize(group_by(DND1_Mutation, DepMap_ID), N_DND1_mutation = n())
+DND1_Metadata_expression = full_join(N_DND1_mutation, meta_DND1, "DepMap_ID")
+DND1_Metadata_expression$DND1_mutated =!is.na(DND1_Metadata_expression$N_DND1_mutation)
+Final_Dataframe_DND1 = DND1_Metadata_expression[ ,c("DepMap_ID", "DND1_mutated", "DND1", "primary_disease")]
+###Made data frame with expression of DND1, mutationstatus, cell line, and cancer sub type
+ggplot(Final_Dataframe_DND1) + geom_boxplot(mapping = aes(DND1_mutated, DND1)) + ggtitle("Mutated DND1 Expression") + theme_minimal()
+t.test(DND1 ~ DND1_mutated, Final_Dataframe_DND1)
+table(Final_Dataframe_DND1$DND1_mutated)
+```
+See if the drug has a difference in impact based on cancer type
+```{r}
+BWA4C = prismdf[ ,c("DepMap_ID","BRD-K80194255-001-01-9::2.63789459194::MTS007")]
+BWA4C_meta = inner_join(Final_Dataframe_DND1, BWA4C, "DepMap_ID")
+ggplot(BWA4C_meta) + geom_boxplot(mapping = aes(primary_disease, `BRD-K80194255-001-01-9::2.63789459194::MTS007`)) + ggtitle("All Cancer BWA4C Response") + theme_classic()+theme(axis.text.x = element_text(angle = 90))
+```
+What about expression level?
+```{r}
+ggplot(BWA4C_meta)+geom_point(mapping = aes(DND1, `BRD-K80194255-001-01-9::2.63789459194::MTS007`)) + ggtitle("Drug response based on DND1 expression") + theme_classic()
+cor(BWA4C_meta$DND1,BWA4C_meta$`BRD-K80194255-001-01-9::2.63789459194::MTS007`,use = "pairwise.complete.obs")
+```
+And Mutation Status?
+```{r}
+ggplot(BWA4C_meta)+geom_boxplot(mapping = aes(DND1_mutated, `BRD-K80194255-001-01-9::2.63789459194::MTS007`)) + ggtitle("Drug response based on DND1 Mutation Status") + theme_classic()
+t.test(`BRD-K80194255-001-01-9::2.63789459194::MTS007`~ DND1_mutated, BWA4C_meta)
+```
+
